@@ -1,4 +1,4 @@
-with Text_io,CHAINES;use Text_io,CHAINES;
+with Text_io;use Text_io;
 
 package common_types is
         type T_hour is record
@@ -15,7 +15,7 @@ package common_types is
 
         type T_busStop is record
                 idBusStop : integer;
-                name : CHAINE;
+                name : String(1..50);
                 position : T_position;
         end record;
 

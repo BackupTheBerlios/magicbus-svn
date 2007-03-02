@@ -2,7 +2,7 @@
 --                              BusStop.adb                                                            --
 --                                                                                                     --
 ---------------------------------------------------------------------------------------------------------
-with Text_io,CHAINES;use Text_io,CHAINES;
+with Text_io;use Text_io;
 
 package body BusStop_package is
     
