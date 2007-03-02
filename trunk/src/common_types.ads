@@ -9,9 +9,9 @@ package common_types is
         type T_listHours is array (1..50) of T_hour;
 
         type T_position is record
-        x:integer;
-        y:integer;
-    end record;
+            x:integer;
+            y:integer;
+        end record;
 
         type T_busStop is record
                 idBusStop : integer;
@@ -29,8 +29,11 @@ package common_types is
 
         type T_Line is record
             id_line : integer;
-        BusStop_List : T_busStopList;
-    end record;
+            BusStop_List : T_busStopList;
+        end record;
+    
+       
+
 
 end common_types;
 

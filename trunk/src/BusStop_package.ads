@@ -1,23 +1,22 @@
-with Text_io,CHAINES,common_types;use Text_io,CHAINES,common_types;
+with Text_io,common_types;use Text_io,common_types;
 
 package BusStop_package is
-
-    task BusStop is        
-        entry emit(position_bus : in T_position);
-        entry receiveDisplay(toDisplay : in CHAINE);
-        entry returnPositionBusStop(position_r : out T_position);
-                
+    
+    
+    task type BusStop is       
+        --entry initBusStop(ptEmettor : out ptEmettorType; ptRadio : out ptRadioType;ptScreen : out ptScreenType);  
     end BusStop;
     
-    task Radio is
-      entry receiveDisplay (toDisplay : in CHAINE);      
+    task type Radio is
+       
+        entry receiveDisplay(toDisplay : in String);      
     end Radio;
     
-    task Screen is
-        entry display (toDisplay : in CHAINE);      
+    task type Screen is
+        entry display (toDisplay : in String);      
     end Screen;
     
-    task Emettor is
+    task type Emettor is
         entry emit (position_bus : in T_position);      
     end Emettor;  
     
