@@ -1,7 +1,8 @@
-with Text_io,BusStop_package,common_types_ptr,common_types;use Text_io,BusStop_package,common_types_ptr,common_types;
+with Interfaces.C,Text_io,BusStop_package,common_types_ptr,common_types;use Text_io,BusStop_package,common_types_ptr,Interfaces.C,common_types;
 
 
 procedure Main is 
+    --pragma import(C,tachatte,"tachatte");
     Seconde : constant duration := 1.0;
     pos1 : ptrT_position:= new T_position'(3, 5);
     pt : ptrString:=new String'("Arret 1");
@@ -17,5 +18,7 @@ begin
     B1.receiveDisplay("Affichage sur l'ecran de l'arret 1");
     B1.emit(pos1.all);
     B2.emit(pos1.all);
+    
+    
     --put_line(B1.name);
 end Main;
