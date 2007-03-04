@@ -2,7 +2,7 @@ with Text_io,BusStop_package;use Text_io,BusStop_package;
 
 package common_types_ptr is
     
-    type ptBusStopType is access BusStop_package.BusStop;
+    type ptBusStopType is access BusStop;
     type ptRadioType is access Radio;
     type ptEmettorType is access Emettor;
     type ptScreenType is access Screen;
