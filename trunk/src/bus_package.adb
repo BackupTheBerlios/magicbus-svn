@@ -22,7 +22,7 @@ begin
      
      
 --/***********************************************************************************************************/  
---/******************************************Driver**********************************************************/
+--/******************************************Driver***********************************************************/
 --/***********************************************************************************************************/  
      
   protected  body Driver is 
@@ -65,7 +65,7 @@ begin
      
      
 --/***********************************************************************************************************/
---/**********************************Speed_Control*********************************************************/
+--/**********************************Speed_Control************************************************************/
 --/***********************************************************************************************************/  
      
 
@@ -107,4 +107,58 @@ begin
        end ReturnSpeed;
   end Speed_Control;
 
+    --/***********************************************************************************************************/  
+    --/***********************************************Radio du bus************************************************/
+    --/***********************************************************************************************************/
+    protected body Radio is       
+        procedure receiveTimeDelay(timeDelay : in Float) is
+        begin
+              driver_ptr.calculateSpeed(timeDelay);  
+        end receiveTimeDelay;
+    end Radio;     
+       
+    --/***********************************************************************************************************/  
+    --/**********************************************Bus odometer*************************************************/
+    --/***********************************************************************************************************/
+    protected body Odometer is       
+        procedure returnDistance(distance:out float) is
+        begin
+            distance:=covered_distance;
+        end returnDistance;
+        procedure raz is
+        begin
+            covered_distance:=0.0;
+        end raz;
+        
+        procedure update is
+        begin
+            --calcul a faire ne fonction de la vitesse
+            covered_distance:=covered_distance + 5.0;
+        end update;
+    end Odometer; 
+    
+    --/***********************************************************************************************************/  
+    --/*********************************************Bus controller************************************************/
+    --/***********************************************************************************************************/
+    --protected body Bus_Controller is  
+    --    procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position) is
+    --    begin
+    --        new_position.x:=old_position.x + 5;
+    --        new_position.y:=old_position.y + 5;
+    --    end calculatePosition;
+    --    Seconde : constant duration := 1.0;
+    --begin      
+    --    loop
+    --        delay(5*Seconde);
+    --        odom.returnDistance(distance);
+    --        calculatePosition(busPosition,distance,new_position);
+    --        busPosition:=new_position;
+    --   end loop; 
+    --end Bus_Controller;    
+    
+  
+    
+    
+    
+    
 end Bus_package;
