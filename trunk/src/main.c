@@ -1,17 +1,18 @@
+
 extern void lancement();
 extern void adainit();
 extern void adafinal();
-void affichage();
+void affichage(char * test[]);
 
 int main(int argc, char *argv[]){
-printf("Cest parti");
-adainit();
-lancement();
-adafinal();
-return 0;
+	printf("%s\n","Main C en route");
+	adainit();
+	lancement("Bienvenue dans magicbus (param envoye de C vers ADA)");
+	adafinal();
+	return 0;
 }
 
-void affichage()
+void affichage(char * test[])
 {
-printf("Ada m'a appele\n");
+	printf("%s\n",test);
 }

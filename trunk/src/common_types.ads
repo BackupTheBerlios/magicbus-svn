@@ -1,5 +1,4 @@
-with Text_io;use Text_io;
-
+with Text_io,Interfaces.C;use Text_io,Interfaces.C;
 package common_types is
         type T_hour is record
                 heure : integer;
@@ -38,7 +37,7 @@ package common_types is
     
         Seconde : constant duration := 1.0;
        
-
+        subtype String_c is Interfaces.C.Char_Array (Interfaces.C.Size_T);   
 
 end common_types;
 
