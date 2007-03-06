@@ -11,14 +11,13 @@ procedure lancement is
     pt2: ptrString :=new String'("Arret 2");
     A2 : BusStop_package.BusStop(2,pt2,pos2); 
     Tab: array (0..5) of T_Arret;
-    B1:Driver;
 begin
     put_line("gogogogogo");
     delay(5*Seconde);
-    B1.calculateSpeed(5.0);
+    --appelle une fonction C
+    affichage;
     A1.receiveDisplay("Affichage sur l'ecran de l'arret 1");
     A1.emit(pos1.all);
-    A2.emit(pos1.all);
-    B1.calculateSpeed(-70.0);
+    A2.emit(pos1.all);    
 end lancement;
 end test;

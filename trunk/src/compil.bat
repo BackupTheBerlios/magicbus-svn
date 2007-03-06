@@ -1,4 +1,5 @@
+del b~*.*
+gcc -c main.c
 gnatmake -c *.adb
 gnatbind -n *.ali
-gcc -c main.c
 gnatlink test.ali main.o -o magicbus
