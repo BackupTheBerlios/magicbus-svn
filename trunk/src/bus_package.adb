@@ -8,9 +8,7 @@ with text_io,common_types,Ada.Numerics.Elementary_Functions;
 use Ada.Numerics.Elementary_Functions,text_io,common_types;
 
 package body Bus_package is
-
-       
-    
+ 
 task body Bus is
     id_line : integer;
     listOfBusStop : T_busStopList;
@@ -72,8 +70,8 @@ task body Bus is
     --/******************************************Driver***********************************************************/
     --/***********************************************************************************************************/
     protected Driver is
-        entry changeLine(new_line : in integer);
-        entry changeDirection;
+        procedure changeLine(new_line : in integer);
+        procedure changeDirection;
         entry setListBusStop(listBusStop : in T_busStopList);
         entry calculateSpeed(delay_time:in float);
         private
@@ -83,12 +81,12 @@ task body Bus is
    
     protected  body Driver is
         
-        entry changeLine (new_line : in integer)when  id_line=1 is
+        procedure changeLine (new_line : in integer)is
         begin
             id_line:= new_line;
         end changeLine;
             
-        entry changeDirection when  id_line=1 is
+        procedure changeDirection is
         begin
             if(direction = Aller) then
                 direction:= Retour;
@@ -180,10 +178,72 @@ task body Bus is
                     StandardChannel.receiveTimeDelay(timeDelay);
                 end receiveTimeDelay;
             end select;
+            
         end loop;
     end Radio;     
        
     
+    --/***********************************************************************************************************/  
+    --/**********************************************Bus odometer*************************************************/
+    --/***********************************************************************************************************/
+    protected Odometer is       
+        procedure returnDistance(distance:out float) ;
+        procedure raz;
+    private
+           covered_distance : float;
+           cycleTime:float:=20.0;
+           procedure update;
+    end Odometer; 
+    
+    protected body Odometer is       
+        procedure returnDistance(distance:out float) is
+        begin
+            distance:=covered_distance;
+        end returnDistance;
+        
+        procedure raz is
+        begin
+            covered_distance:=0.0;
+        end raz;
+        
+        procedure update is
+            speed : integer;
+        begin
+            Speed_Control.returnSpeed(speed);
+            covered_distance:=covered_distance + cycleTime * float(speed)/3.6;
+        end update;
+        
+    end Odometer; 
+    
+    --/***********************************************************************************************************/  
+    --/*********************************************Bus controller************************************************/
+    --/***********************************************************************************************************/
+    task Bus_Controller is  
+   
+    end Bus_Controller;    
+    
+    task body Bus_Controller is  
+        busPosition : T_Position;
+        
+        procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position);    
+              
+        procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position) is
+        begin
+            new_position.x:=old_position.x + 5;
+            new_position.y:=old_position.y + 5;
+        end calculatePosition;
+        
+        Seconde : constant duration := 1.0;
+        distance : float;
+        new_position : T_Position;
+    begin      
+        loop
+            delay(5*Seconde);
+            Odometer.returnDistance(distance);
+            calculatePosition(busPosition,distance,new_position);
+            busPosition:=new_position;
+       end loop; 
+    end Bus_Controller;    
 begin 
     Put_line("on demarre le bus");   
 	loop
@@ -201,6 +261,14 @@ begin
             accept receiveTimeDelay(delay_time : in float) do
                 Radio.receiveTimeDelay(delay_time);
             end receiveTimeDelay;
+        or
+            accept changeLine(id_line : in integer) do
+                Driver.changeLine(id_line);
+            end changeLine;    
+        or
+            accept changeDirection do
+                Driver.changeDirection;
+            end changeDirection; 
         end select;
     end loop; 
  end Bus; 
@@ -216,25 +284,7 @@ begin
   
 
  
-    --/***********************************************************************************************************/  
-    --/**********************************************Bus odometer*************************************************/
-    --/***********************************************************************************************************/
-    protected body Odometer is       
-        procedure returnDistance(distance:out float) is
-        begin
-            distance:=covered_distance;
-        end returnDistance;
-        procedure raz is
-        begin
-            covered_distance:=0.0;
-        end raz;
-        
-        procedure update is
-        begin
-            --calcul a faire ne fonction de la vitesse
-            covered_distance:=covered_distance + 5.0;
-        end update;
-    end Odometer; 
+ 
     
     --/***********************************************************************************************************/  
     --/*********************************************Bus controller************************************************/
