@@ -10,6 +10,7 @@ procedure lancement(Chaine : in String_c) is
     pos2 : ptrT_position:= new T_position'(5, 15);
     pt2: ptrString :=new String'("Arret 2");
     A2 : BusStop_package.BusStop(2,pt2,pos2); 
+    
     Bus1 : Bus;
 begin
     put_line(To_ADA(Chaine));
