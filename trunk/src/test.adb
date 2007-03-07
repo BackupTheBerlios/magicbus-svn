@@ -1,4 +1,4 @@
-with Interfaces.C,Text_io,BusStop_package,bus_package,common_types_ptr,common_types;use Text_io,BusStop_package,common_types_ptr,Interfaces.C,bus_package,common_types;
+with Interfaces.C,Text_io,BusStop_package,bus_package,common_types;use Text_io,BusStop_package,Interfaces.C,bus_package,common_types;
 
 package body test is
 procedure lancement(Chaine : in String_c) is 
@@ -10,7 +10,6 @@ procedure lancement(Chaine : in String_c) is
     pos2 : ptrT_position:= new T_position'(5, 15);
     pt2: ptrString :=new String'("Arret 2");
     A2 : BusStop_package.BusStop(2,pt2,pos2); 
-    Tab: array (0..5) of T_Arret;
     Bus1 : Bus;
 begin
     put_line(To_ADA(Chaine));
