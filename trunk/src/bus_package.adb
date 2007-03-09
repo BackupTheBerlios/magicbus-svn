@@ -4,14 +4,14 @@
 ---------------------------------------------------------------------------------------------------------
 
 
-with text_io,common_types,Ada.Numerics.Elementary_Functions;
-use Ada.Numerics.Elementary_Functions,text_io,common_types;
+with text_io,common_types,common_types_busStop,Ada.Numerics.Elementary_Functions;
+use Ada.Numerics.Elementary_Functions,text_io,common_types,common_types_busStop;
 
 package body Bus_package is
  
 task body Bus is
-    id_line : integer;
-    listOfBusStop : T_busStopList;
+    id_bus : integer := num_bus;
+    line : T_Line:= bus_line.all;
 	Seconde : constant duration := 1.0;
     
     --/***********************************************************************************************************/
@@ -70,32 +70,34 @@ task body Bus is
     --/******************************************Driver***********************************************************/
     --/***********************************************************************************************************/
     protected Driver is
-        procedure changeLine(new_line : in integer);
+        procedure changeLine(newId_line : in integer);
         procedure changeDirection;
-        entry setListBusStop(listBusStop : in T_busStopList);
-        entry calculateSpeed(delay_time:in float);
+        procedure setListBusStop(listBusStop : in T_busStopList);
+        procedure calculateSpeed(delay_time:in float);
         private
-             direction : T_direction;
-             id_line:integer:=1;
+             direction : T_direction:=Aller;
     end Driver;
    
     protected  body Driver is
         
-        procedure changeLine (new_line : in integer)is
+        procedure changeLine (newId_line : in integer)is
         begin
-            id_line:= new_line;
+           Bus.line.id_line:=newId_line;
         end changeLine;
             
         procedure changeDirection is
         begin
             if(direction = Aller) then
                 direction:= Retour;
+                put_line("changement de direction : sens = Retour"); 
             else
-                direction:= Retour;
+                direction:= Aller;
+                put_line("changement de direction : sens = Aller"); 
             end if;
+
         end changeDirection;
                 
-        entry setListBusStop(listBusStop : in T_busStopList) when  id_line=1 is
+        procedure setListBusStop(listBusStop : in T_busStopList) is
         begin
             for K in 1..50 loop
                 --listOfBusStop(K):=listBusStop(K);
@@ -103,10 +105,9 @@ task body Bus is
             end loop;
         end setListBusStop;
                 
-        entry calculateSpeed(delay_time:in float) when id_line=1 is
+        procedure calculateSpeed(delay_time:in float) is
         begin
                             put_line("calculatespeed");
-                            Speed_Control.START;
                             if (delay_time<0.0)then
                                 Speed_Control.ACCELERATE;
                             else
@@ -122,23 +123,23 @@ task body Bus is
     --/***********************************************************************************************************/
     task Radio is
         entry receiveTimeDelay(timeDelay : in Float);
-        entry sendBusPosition (position : in T_position);
-        entry sendEmergencyCall(emergency : in string);
+        entry sendBusPosition (num_bus : in integer; position : in T_position);
+        entry sendEmergencyCall(num_bus : in integer; emergency : in string);
     end Radio;
     
     task body Radio is  
    
         --/************* Channel standard ***********/
         protected StandardChannel is
-            procedure sendBusPosition(position : in T_Position);
+            procedure sendBusPosition(num_bus : in integer; position : in T_Position);
             procedure receiveTimeDelay (delay_time : in float);
         end StandardChannel;
     
         protected body StandardChannel is
-            procedure sendBusPosition(position : in T_Position) is
+            procedure sendBusPosition(num_bus : in integer; position : in T_Position) is
             begin
-                put_line("envoie de ma position ");
-                Radio.sendBusPosition(position);
+                put("envoie position bus numéro ");put_line(integer'image(num_bus));
+                Bus.sendBusPosition(num_bus,position);
                 --appel a la radio du centre
 
             end sendBusPosition;
@@ -151,14 +152,14 @@ task body Bus is
         
         --/************* Channel d'urgence ***********/
         protected EmergencyChannel is
-            procedure sendEmergencyCall(emergency : in string);
+            procedure sendEmergencyCall(num_bus : in integer; emergency : in string);
         end EmergencyChannel;
     
         protected body EmergencyChannel is
-            procedure sendEmergencyCall(emergency : in string) is
+            procedure sendEmergencyCall(num_bus : in integer; emergency : in string) is
             begin
                 put_line("envoie d'un message d'urgence ");
-                Radio.sendEmergencyCall(emergency);
+                Bus.sendEmergencyCall(num_bus,emergency);
                 --appel a la radio du centre pour qu'il le reçoive...
             end sendEmergencyCall;
         end EmergencyChannel;
@@ -166,12 +167,12 @@ task body Bus is
     begin
         loop   
             select
-                accept sendEmergencyCall(emergency : in string) do
-                    Bus.sendEmergencyCall(emergency);
+                accept sendEmergencyCall(num_bus : in integer; emergency : in string) do
+                    EmergencyChannel.sendEmergencyCall(num_bus,emergency);
                 end sendEmergencyCall;
             or 
-                accept sendBusPosition (position : in T_Position) do
-                    Bus.sendBusPosition(position);    
+                accept sendBusPosition (num_bus : in integer;position : in T_Position) do
+                    StandardChannel.sendBusPosition(num_bus,position);    
                 end sendBusPosition;
             or
                 accept receiveTimeDelay(timeDelay : in Float) do
@@ -186,33 +187,42 @@ task body Bus is
     --/***********************************************************************************************************/  
     --/**********************************************Bus odometer*************************************************/
     --/***********************************************************************************************************/
-    protected Odometer is       
-        procedure returnDistance(distance:out float) ;
-        procedure raz;
-    private
-           covered_distance : float;
-           cycleTime:float:=20.0;
-           procedure update;
+    task Odometer is       
+        entry returnDistance(distance:out float) ;
+        entry raz;
+    
     end Odometer; 
     
-    protected body Odometer is       
-        procedure returnDistance(distance:out float) is
-        begin
-            distance:=covered_distance;
-        end returnDistance;
-        
-        procedure raz is
-        begin
-            covered_distance:=0.0;
-        end raz;
+    task body Odometer is
+        covered_distance : float:=0.0;
+        cycleTime : constant duration := 2.0;
+        procedure update; 
         
         procedure update is
             speed : integer;
         begin
             Speed_Control.returnSpeed(speed);
-            covered_distance:=covered_distance + cycleTime * float(speed)/3.6;
+            covered_distance:=covered_distance + float(cycleTime) * float(speed)/3.6;
+            put("distance parcourue : ");put_line(float'image(covered_distance));
+            
         end update;
         
+    begin
+        loop
+            select
+                accept returnDistance(distance : out float) do
+                    distance:=covered_distance;
+                end returnDistance;
+            or
+                accept raz do
+                    covered_distance:=0.0;
+                end raz;
+            else
+                delay(cycleTime);
+                update;
+            end select;
+        end loop; 
+       
     end Odometer; 
     
     --/***********************************************************************************************************/  
@@ -223,37 +233,73 @@ task body Bus is
     end Bus_Controller;    
     
     task body Bus_Controller is  
-        busPosition : T_Position;
-        
+
         procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position);    
               
         procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position) is
         begin
             new_position.x:=old_position.x + 5;
             new_position.y:=old_position.y + 5;
+            put_line("nouvelle position calculée");
+            Radio.sendBusPosition (id_bus,new_position);
         end calculatePosition;
         
-        Seconde : constant duration := 1.0;
+        busPosition : T_position;
+        Seconde : constant duration :=2.0;
         distance : float;
         new_position : T_Position;
-    begin      
+    begin
+        busPosition.x:=0;
+        busPosition.y:=0;      
         loop
-            delay(5*Seconde);
+            delay(Seconde);
             Odometer.returnDistance(distance);
             calculatePosition(busPosition,distance,new_position);
             busPosition:=new_position;
        end loop; 
-    end Bus_Controller;    
+    end Bus_Controller;
+    
+    
+    --/***********************************************************************************************************/  
+    --/************************************************ Sensor ***************************************************/
+    --/***********************************************************************************************************/
+    task Sensor is
+        entry getLastBusStopCapted (id_busStop : out ptrT_busStopRecord);
+        entry setLastBusStopCapted (id_busStop : in ptrT_busStopRecord);
+    --    entry searchbusStop;
+    end Sensor;
+    
+    task body Sensor is
+        lastBusStopCapted : ptrT_busStopRecord;
+        nextBusStop : ptrT_busStopRecord;
+        position : T_position;
+    begin
+        loop
+            select
+                accept getLastBusStopCapted (id_busStop : out ptrT_busStopRecord) do
+                    id_busStop:=lastBusStopCapted;
+                end getLastBusStopCapted;
+            or
+                accept setLastBusStopCapted (id_busStop : in ptrT_busStopRecord) do
+                    lastBusStopCapted:=id_busStop;
+                end setLastBusStopCapted;
+            --else
+                --nextBusStop.busStop.emit;
+            end select;
+        end loop;
+    end Sensor;
+        
 begin 
     Put_line("on demarre le bus");   
+    Speed_Control.START;
 	loop
         select
-            accept sendEmergencyCall(emergency : in string) do
+            accept sendEmergencyCall(num_bus : in integer; emergency : in string) do
                 put_line("envoi d'un message d'urgence bus");
                 --appel à la radio du centre
             end sendEmergencyCall;
         or
-            accept sendBusPosition(position : in T_position) do
+            accept sendBusPosition(num_bus : in integer; position : in T_position) do
                 put_line("envoi de la position du bus");
                 --appel à la radio du centre
             end sendBusPosition;
@@ -262,8 +308,8 @@ begin
                 Radio.receiveTimeDelay(delay_time);
             end receiveTimeDelay;
         or
-            accept changeLine(id_line : in integer) do
-                Driver.changeLine(id_line);
+            accept changeLine(newId_line : in integer) do
+                Driver.changeLine(newId_line);
             end changeLine;    
         or
             accept changeDirection do
@@ -272,42 +318,4 @@ begin
         end select;
     end loop; 
  end Bus; 
-     
-     
-  
-     
-  
-     
-     
-
-
-  
-
- 
- 
-    
-    --/***********************************************************************************************************/  
-    --/*********************************************Bus controller************************************************/
-    --/***********************************************************************************************************/
-    --protected body Bus_Controller is  
-    --    procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position) is
-    --    begin
-    --        new_position.x:=old_position.x + 5;
-    --        new_position.y:=old_position.y + 5;
-    --    end calculatePosition;
-    --    Seconde : constant duration := 1.0;
-    --begin      
-    --    loop
-    --        delay(5*Seconde);
-    --        odom.returnDistance(distance);
-    --        calculatePosition(busPosition,distance,new_position);
-    --        busPosition:=new_position;
-    --   end loop; 
-    --end Bus_Controller;    
-    
-  
-    
-    
-    
-    
 end Bus_package;

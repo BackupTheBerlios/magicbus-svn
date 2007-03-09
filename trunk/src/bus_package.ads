@@ -2,19 +2,20 @@
 --                              Bus_Package.ads                                                        --
 --                                                                                                     --
 ---------------------------------------------------------------------------------------------------------
-with text_io,common_types,Ada.Numerics.Elementary_Functions;
-use Ada.Numerics.Elementary_Functions,text_io,common_types;
+with text_io,common_types,common_types_busStop,Ada.Numerics.Elementary_Functions;
+use Ada.Numerics.Elementary_Functions,text_io,common_types,common_types_busStop;
 
 
 package Bus_package is
 	type T_direction is (Aller,Retour);
     
-    task  type Bus is
-        entry changeLine(id_line : in integer);
+    task  type Bus (num_bus : integer;bus_line : ptrT_Line) is
+--        (bus_line : ptrT_Line)
+        entry changeLine(newId_line : in integer);
         entry changeDirection;
         entry receiveTimeDelay(delay_time : in float);
-        entry sendBusPosition(position : in T_Position);
-        entry sendEmergencyCall(emergency : in string);
+        entry sendBusPosition(num_bus : in integer ; position : in T_Position);
+        entry sendEmergencyCall(num_bus : in integer;emergency : in string);
         
     end Bus;
         
