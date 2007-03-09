@@ -263,7 +263,7 @@ task body Bus is
     --/************************************************ Sensor ***************************************************/
     --/***********************************************************************************************************/
     task Sensor is
-        entry setLastBusStopCapted (id_busStop : in ptrT_busStopRecord);
+     
     end Sensor;
     
     task body Sensor is
@@ -271,23 +271,20 @@ task body Bus is
         IS_ARRIVED_BUSSTOP : boolean := false;
     begin
         loop
-            select
-                when IS_ARRIVED_BUSSTOP => 
-                    accept setLastBusStopCapted (id_busStop : in ptrT_busStopRecord) do
-                        --arret du bus à l'arret
-                        Speed_control.STOP;
-                        --mise à jour du prochain arret à faire
-                        lastBusStopCapted:=nextBusStop;
-                        indice_busStop:=indice_busStop+1;
-                        nextBusStop:=line.busStop_List(indice_busStop);
-                        --simulation de la montée des voyageurs
-                        delay(2.0);
-                        --on redémarre le bus
-                        Speed_control.START;
-                end setLastBusStopCapted;
-            else
-                nextBusStop.busStop.emit(position,IS_ARRIVED_BUSSTOP);
-            end select;
+            nextBusStop.busStop.emit(position,IS_ARRIVED_BUSSTOP);
+            if (IS_ARRIVED_BUSSTOP) then
+                --arret du bus à l'arret
+                Speed_control.STOP;
+                --mise à jour du prochain arret à faire
+                lastBusStopCapted:=nextBusStop;
+                indice_busStop:=indice_busStop+1;
+                nextBusStop:=line.busStop_List(indice_busStop);
+                --simulation de la montée des voyageurs
+                delay(2.0);
+                --on redémarre le bus
+                Speed_control.START;
+                IS_ARRIVED_BUSSTOP:=false;
+            end if;
         end loop;
     end Sensor;
         
