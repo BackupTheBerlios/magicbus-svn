@@ -11,7 +11,7 @@ package Bus_package is
     
     task  type Bus (num_bus : integer;bus_line : ptrT_Line) is
 --        (bus_line : ptrT_Line)
-        entry changeLine(newId_line : in integer);
+        entry changeLine(new_line : in ptrT_line);
         entry changeDirection;
         entry receiveTimeDelay(delay_time : in float);
         entry sendBusPosition(num_bus : in integer ; position : in T_Position);

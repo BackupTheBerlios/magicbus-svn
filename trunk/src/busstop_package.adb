@@ -38,7 +38,7 @@ package body BusStop_package is
         --/******************************************Emmettor de l'arret**********************************************/
         --/***********************************************************************************************************/
         task Emettor is
-            entry emit (position_bus : in T_position);      
+            entry emit (position_bus : in T_position;is_arrived : in out boolean);      
         end Emettor; 
         
         --/***********************************************************************************************************/  
@@ -87,13 +87,14 @@ package body BusStop_package is
                 -- == la position du bus qui appelle le emit
                 --emit appelle la methode du bus qui sette le dernier arret ou est passé le bus
                 
-                accept emit(position_bus : in T_position) do                
+                accept emit(position_bus : in T_position;is_arrived : in out boolean) do                
                     --BusStop.returnPositionBusStop(position_t);
                     if(position.x = position_bus.x and position.y = position_bus.y) then
-                        --appel du code emettor du bus (setLastBusStopCapted)
                         put_line("Bus passe pres de l'arret");
+                        is_arrived := true;
                     else
                         put_line("Remballe ton stand");
+                        is_arrived := false;
                     end if;
                 end emit;
             end loop; 
@@ -105,8 +106,8 @@ package body BusStop_package is
         
         loop
             select
-                     accept emit(position_bus : in T_position) do
-                          Emettor.emit(position_bus);
+                     accept emit(position_bus : in T_position;is_arrived : in out boolean) do
+                          Emettor.emit(position_bus,is_arrived);
                      end emit;
                 or
                      accept receiveDisplay(toDisplay : in String) do

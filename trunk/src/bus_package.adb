@@ -13,6 +13,10 @@ task body Bus is
     id_bus : integer := num_bus;
     line : T_Line:= bus_line.all;
 	Seconde : constant duration := 1.0;
+    position : T_Position;
+    lastBusStopCapted : ptrT_busStopRecord;
+    nextBusStop : ptrT_busStopRecord;
+    indice_busStop : integer := 1;
     
     --/***********************************************************************************************************/
     --/**********************************Speed_Control************************************************************/
@@ -70,7 +74,7 @@ task body Bus is
     --/******************************************Driver***********************************************************/
     --/***********************************************************************************************************/
     protected Driver is
-        procedure changeLine(newId_line : in integer);
+        procedure changeLine(new_line : in ptrT_line);
         procedure changeDirection;
         procedure setListBusStop(listBusStop : in T_busStopList);
         procedure calculateSpeed(delay_time:in float);
@@ -80,9 +84,9 @@ task body Bus is
    
     protected  body Driver is
         
-        procedure changeLine (newId_line : in integer)is
+        procedure changeLine (new_line : in ptrT_line)is
         begin
-           Bus.line.id_line:=newId_line;
+           Bus.line:=new_line.all;
         end changeLine;
             
         procedure changeDirection is
@@ -234,28 +238,23 @@ task body Bus is
     
     task body Bus_Controller is  
 
-        procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position);    
+        procedure calculatePosition(distance:in float);    
               
-        procedure calculatePosition(old_position:in T_Position;distance:in float;new_position:out T_Position) is
+        procedure calculatePosition(distance:in float) is
         begin
-            new_position.x:=old_position.x + 5;
-            new_position.y:=old_position.y + 5;
+            position.x:=position.x + 5;
+            position.y:=position.y + 5;
             put_line("nouvelle position calculée");
-            Radio.sendBusPosition (id_bus,new_position);
+            Radio.sendBusPosition (id_bus,position);
         end calculatePosition;
         
-        busPosition : T_position;
         Seconde : constant duration :=2.0;
         distance : float;
-        new_position : T_Position;
-    begin
-        busPosition.x:=0;
-        busPosition.y:=0;      
+    begin   
         loop
             delay(Seconde);
             Odometer.returnDistance(distance);
-            calculatePosition(busPosition,distance,new_position);
-            busPosition:=new_position;
+            calculatePosition(distance);
        end loop; 
     end Bus_Controller;
     
@@ -264,33 +263,40 @@ task body Bus is
     --/************************************************ Sensor ***************************************************/
     --/***********************************************************************************************************/
     task Sensor is
-        entry getLastBusStopCapted (id_busStop : out ptrT_busStopRecord);
         entry setLastBusStopCapted (id_busStop : in ptrT_busStopRecord);
-    --    entry searchbusStop;
     end Sensor;
     
     task body Sensor is
-        lastBusStopCapted : ptrT_busStopRecord;
-        nextBusStop : ptrT_busStopRecord;
-        position : T_position;
+        lastBusStopCapted : ptrT_busStopRecord; 
+        IS_ARRIVED_BUSSTOP : boolean := false;
     begin
         loop
             select
-                accept getLastBusStopCapted (id_busStop : out ptrT_busStopRecord) do
-                    id_busStop:=lastBusStopCapted;
-                end getLastBusStopCapted;
-            or
-                accept setLastBusStopCapted (id_busStop : in ptrT_busStopRecord) do
-                    lastBusStopCapted:=id_busStop;
+                when IS_ARRIVED_BUSSTOP => 
+                    accept setLastBusStopCapted (id_busStop : in ptrT_busStopRecord) do
+                        --arret du bus à l'arret
+                        Speed_control.STOP;
+                        --mise à jour du prochain arret à faire
+                        lastBusStopCapted:=nextBusStop;
+                        indice_busStop:=indice_busStop+1;
+                        nextBusStop:=line.busStop_List(indice_busStop);
+                        --simulation de la montée des voyageurs
+                        delay(2.0);
+                        --on redémarre le bus
+                        Speed_control.START;
                 end setLastBusStopCapted;
-            --else
-                --nextBusStop.busStop.emit;
+            else
+                nextBusStop.busStop.emit(position,IS_ARRIVED_BUSSTOP);
             end select;
         end loop;
     end Sensor;
         
 begin 
     Put_line("on demarre le bus");   
+    position.x:=0;
+    position.y:=0;
+    lastBusStopCapted := null;
+    nextBusStop := line.busStop_List(1);
     Speed_Control.START;
 	loop
         select
@@ -308,8 +314,8 @@ begin
                 Radio.receiveTimeDelay(delay_time);
             end receiveTimeDelay;
         or
-            accept changeLine(newId_line : in integer) do
-                Driver.changeLine(newId_line);
+            accept changeLine(new_line : in ptrT_line) do
+                Driver.changeLine(new_line);
             end changeLine;    
         or
             accept changeDirection do
