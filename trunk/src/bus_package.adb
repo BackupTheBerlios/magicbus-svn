@@ -142,7 +142,7 @@ task body Bus is
         protected body StandardChannel is
             procedure sendBusPosition(num_bus : in integer; position : in T_Position) is
             begin
-                put("envoie position bus numéro ");put_line(integer'image(num_bus));
+                put("envoie position bus numero ");put_line(integer'image(num_bus));
                 Bus.sendBusPosition(num_bus,position);
                 --appel a la radio du centre
 
@@ -244,7 +244,7 @@ task body Bus is
         begin
             position.x:=position.x + 5;
             position.y:=position.y + 5;
-            put_line("nouvelle position calculée");
+            put_line("nouvelle position calculee");
             Radio.sendBusPosition (id_bus,position);
         end calculatePosition;
         

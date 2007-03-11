@@ -47,8 +47,7 @@ package body BusStop_package is
         task body Radio is 
                         
         begin 
-                       
-            put_line("Radio instanciee");
+             
             loop
                 accept receiveDisplay(toDisplay : in String) do
                 Screen.display(toDisplay);
@@ -61,9 +60,6 @@ package body BusStop_package is
         --/***********************************************************************************************************/
         task body Screen is 
             begin 
-            
-                put_line("Screen instancie");
-            
                 loop
                     
                     accept display(toDisplay : in String) do
@@ -80,8 +76,7 @@ package body BusStop_package is
         task body Emettor is 
         begin 
             
-            put_line("Instanciation Emettor...");
-            
+                    
             loop
                 --la methode emit est appelee par le bus ->condition when quand la position de l'arret
                 -- == la position du bus qui appelle le emit

@@ -6,7 +6,7 @@ package common_types_busStop is
     type T_busStopRecord is record
             busStop : ptrT_busStop;
             required : boolean;
-            listHours : T_listHours;
+            --listHours : T_listHours;
     end record;
 
     type ptrT_busStopRecord is access T_busStoprecord;
