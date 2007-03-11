@@ -100,10 +100,6 @@ package body BusStop_package is
         
         loop
             select
-                accept returnNum (numStop : out integer) do
-                    numStop:= idBusStop;
-                end;
-            or     
                 accept emit(position_bus : in T_position;is_arrived : in out boolean) do
                           Emettor.emit(position_bus,is_arrived);
                      end emit;

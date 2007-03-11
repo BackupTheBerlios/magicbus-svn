@@ -5,8 +5,7 @@ use Text_io,BusStop_package,Interfaces.C,bus_package,common_types,common_types_b
 
 
 package body init_object is
-procedure lancement(Chaine : in String_c) is 
-    --pragma import(C,tachatte,"tachatte");
+procedure lancement(Chaine : in String_c) is
     Seconde : constant duration := 1.0;
     pos1 : ptrT_position:= new T_position'(15, 15);
     pt : ptrString:=new String'("Arret 1");
@@ -25,6 +24,7 @@ procedure lancement(Chaine : in String_c) is
     type pt_bus is access Bus;
     B: pt_bus;
 begin
+    put_line(To_ADA(Chaine));
     A1 := new BusStop_package.BusStop(1,pt,pos1);
     A2 := new BusStop_package.BusStop(2,pt2,pos2);
     A3 := new BusStop_package.BusStop(3,pt3,pos3);
@@ -34,8 +34,7 @@ begin
     arr(1):=ptr;
     arr(2):=ptr2;
     arr(3):=ptr3;
-    bus_line:= new T_Line'(1,arr);
-    put_line(To_ADA(Chaine));
+    bus_line:= new T_Line'(1,arr);    
     delay(5*Seconde);    
     B:= new Bus(1,bus_line);
 end lancement;
