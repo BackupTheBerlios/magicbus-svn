@@ -281,6 +281,8 @@ task body Bus is
                 nextBusStop:=line.busStop_List(indice_busStop);
                 --simulation de la montée des voyageurs
                 delay(2.0);
+                --remise a zero de la distance parcourue
+                Odometer.raz;
                 --on redémarre le bus
                 Speed_control.START;
                 IS_ARRIVED_BUSSTOP:=false;
