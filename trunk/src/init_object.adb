@@ -1,5 +1,6 @@
 with Interfaces.C,Text_io,BusStop_package,bus_package,common_types;use Text_io,BusStop_package,Interfaces.C,bus_package,common_types;
 
+
 package body init_object is
 procedure lancement(Chaine : in String_c) is 
     --pragma import(C,tachatte,"tachatte");
@@ -19,7 +20,18 @@ begin
     --Bus1.receiveTimeDelay(-10.0);
     affichage(To_C("Voila un affichage pour tester (param envoye de l'ADA vers le C)"));
     A1.receiveDisplay("Affichage sur l'ecran de l'arret 1");
-    A1.emit(pos1.all);
-    A2.emit(pos1.all);    
+    --A1.emit(pos1.all);
+    --A2.emit(pos1.all);    
 end lancement;
+
+    procedure initBusStop(name : in Char_Array;idBusStop : in int; x : in int; y : in int) is
+        position : ptrT_position :=new T_position'(Integer(x),Integer(y));
+        pt: ptrString :=new String'(To_ADA(name));
+        A1 : BusStop_package.BusStop(Integer(idBusStop),pt,position); 
+    begin
+        
+        null;
+    end initBusStop;
+
 end init_object;
+

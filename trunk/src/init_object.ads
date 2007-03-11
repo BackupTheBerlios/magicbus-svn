@@ -6,4 +6,5 @@ package init_object is
     pragma Export(C, lancement, "lancement");
     procedure affichage(Chaine : in Char_Array);
     pragma Import (C, affichage, "affichage") ;
+    procedure initBusStop(name : in Char_Array; idBusStop : in int; x : in int; y : in int);
 end init_object;
