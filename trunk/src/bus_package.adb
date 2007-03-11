@@ -4,8 +4,8 @@
 ---------------------------------------------------------------------------------------------------------
 
 
-with text_io,common_types,common_types_busStop,Ada.Numerics.Elementary_Functions;
-use Ada.Numerics.Elementary_Functions,text_io,common_types,common_types_busStop;
+with text_io,common_types,common_types_busStop,Ada.Numerics.Elementary_Functions,busstop_package ;
+use Ada.Numerics.Elementary_Functions,text_io,common_types,common_types_busStop,busstop_package ;
 
 package body Bus_package is
  
@@ -17,6 +17,7 @@ task body Bus is
     lastBusStopCapted : ptrT_busStopRecord;
     nextBusStop : ptrT_busStopRecord;
     indice_busStop : integer := 1;
+    IS_ARRIVED_BUSSTOP : boolean := false;
     
     --/***********************************************************************************************************/
     --/**********************************Speed_Control************************************************************/
@@ -220,6 +221,7 @@ task body Bus is
             or
                 accept raz do
                     covered_distance:=0.0;
+                    put_line("remise à zero de la distance parcourue!");
                 end raz;
             else
                 delay(cycleTime);
@@ -263,30 +265,13 @@ task body Bus is
     --/************************************************ Sensor ***************************************************/
     --/***********************************************************************************************************/
     task Sensor is
-     
+        
     end Sensor;
     
     task body Sensor is
-        lastBusStopCapted : ptrT_busStopRecord; 
-        IS_ARRIVED_BUSSTOP : boolean := false;
     begin
-        loop
-            nextBusStop.busStop.emit(position,IS_ARRIVED_BUSSTOP);
-            if (IS_ARRIVED_BUSSTOP) then
-                --arret du bus à l'arret
-                Speed_control.STOP;
-                --mise à jour du prochain arret à faire
-                lastBusStopCapted:=nextBusStop;
-                indice_busStop:=indice_busStop+1;
-                nextBusStop:=line.busStop_List(indice_busStop);
-                --simulation de la montée des voyageurs
-                delay(2.0);
-                --remise a zero de la distance parcourue
-                Odometer.raz;
-                --on redémarre le bus
-                Speed_control.START;
-                IS_ARRIVED_BUSSTOP:=false;
-            end if;
+        loop     
+            Bus.appelerEmit;
         end loop;
     end Sensor;
         
@@ -320,6 +305,25 @@ begin
             accept changeDirection do
                 Driver.changeDirection;
             end changeDirection; 
+        or
+            accept appelerEmit do
+                nextBusStop.busStop.emit(position,IS_ARRIVED_BUSSTOP);
+                if (IS_ARRIVED_BUSSTOP) then
+                    --arret du bus à l'arret
+                    Speed_control.STOP;
+                    --mise à jour du prochain arret à faire
+                    lastBusStopCapted:=nextBusStop;
+                    indice_busStop:=indice_busStop+1;
+                    nextBusStop:=line.busStop_List(indice_busStop);
+                    --simulation de la montée des voyageurs
+                    delay(2.0);
+                    --remise a zero de la distance parcourue
+                    Odometer.raz;
+                    --on redémarre le bus
+                    Speed_control.START;
+                    IS_ARRIVED_BUSSTOP:=false;
+                end if;
+            end appelerEmit;
         end select;
     end loop; 
  end Bus; 

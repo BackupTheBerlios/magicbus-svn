@@ -12,6 +12,7 @@ package BusStop_package is
         entry emit(position_bus : in T_position;is_arrived : in out boolean);
         entry receiveDisplay(toDisplay : in String);
         entry returnPositionBusStop(position_r : out T_position);  
+        entry returnNum (numStop : out integer);
     end BusStop; 
     
 end BusStop_package;

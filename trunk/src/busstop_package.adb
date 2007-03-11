@@ -88,7 +88,6 @@ package body BusStop_package is
                         put_line("Bus passe pres de l'arret");
                         is_arrived := true;
                     else
-                        put_line("Remballe ton stand");
                         is_arrived := false;
                     end if;
                 end emit;
@@ -101,7 +100,11 @@ package body BusStop_package is
         
         loop
             select
-                     accept emit(position_bus : in T_position;is_arrived : in out boolean) do
+                accept returnNum (numStop : out integer) do
+                    numStop:= idBusStop;
+                end;
+            or     
+                accept emit(position_bus : in T_position;is_arrived : in out boolean) do
                           Emettor.emit(position_bus,is_arrived);
                      end emit;
                 or
