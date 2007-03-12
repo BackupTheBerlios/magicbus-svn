@@ -1,7 +1,7 @@
 [Project]
 FileName=magicBus.dev
 Name=magicBus
-UnitCount=8
+UnitCount=7
 Type=1
 Ver=1
 ObjFiles=
@@ -67,24 +67,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit3]
-FileName=test.adb
-Folder=magicBus
-Compile=0
-Link=0
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit4]
-FileName=test.ads
-Folder=magicBus
-Compile=0
-Link=0
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit5]
 FileName=bus_package.adb
 Folder=magicBus
 Compile=0
@@ -93,7 +75,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit6]
+[Unit4]
 FileName=bus_package.ads
 Folder=magicBus
 Compile=0
@@ -102,7 +84,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit7]
+[Unit5]
 FileName=busstop_package.adb
 Folder=magicBus
 Compile=0
@@ -110,6 +92,25 @@ Link=0
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
+
+[Unit6]
+FileName=busstop_package.ads
+Folder=magicBus
+Compile=0
+Link=0
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit7]
+FileName=BusStop.h
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+CompileCpp=0
 
 [Unit8]
 FileName=busstop_package.ads

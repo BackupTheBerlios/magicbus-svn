@@ -1,12 +1,24 @@
 with Interfaces.C;use Interfaces.C;
-with common_types,common_types_busStop;use common_types,common_types_busStop;
+with common_types,common_types_busStop,bus_package;use common_types,common_types_busStop,bus_package;
 package init_object is
     
+    type ptrT_bus is access Bus;
+    NBBUSSTOP:integer;  
+    type A_BusStop is array (1..50) of ptrT_busStop; 
+    NBBUS:integer; 
+    type A_Bus is array (1..30) of ptrT_bus; 
+    tab_BusStop :A_BusStop;
+    tab_Bus :A_Bus; 
+    
+    
+    procedure initGen(nb_bus_stop :in int;nb_bus : in int); 
+    pragma Export(C, initGen, "initGen");        
+     
+    procedure sendDisplay(num_busStop :in int; chaine_affich : in string_c);
+    pragma Export(C, sendDisplay, "sendDisplay");
     procedure lancement(Chaine : in String_c);
     pragma Export(C, lancement, "lancement");
-    procedure affichage(Chaine : in Char_Array);
-    pragma Import (C, affichage, "affichage") ;
-    procedure initBusStop(name : in String_c; idBusStop : in int; x : in int; y : in int);
+    procedure initBusStop(idBusStop : in int; x : in C_float; y : in C_float);
     pragma Export(C, initBusStop, "initBusStop");
     procedure initBus(num_bus : int;bus_line : ptrT_Line);
     pragma Export(C, initBus, "initBus");

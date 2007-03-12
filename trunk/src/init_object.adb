@@ -38,21 +38,39 @@ begin
     delay(5*Seconde);    
     B:= new Bus(1,bus_line);
 end lancement;
-
-procedure initBusStop(name : in String_c;idBusStop : in int; x : in int; y : in int) is
-        position : ptrT_position :=new T_position'(Float(x),Float(y));
-        pt: ptrString :=new String'(To_ADA(name));
-        A1 : BusStop_package.BusStop(Integer(idBusStop),pt,position); 
-    begin
-        
-        null;
-end initBusStop;
     
-procedure initBus(num_bus : int;bus_line : ptrT_Line) is
-       B1 : Bus(Integer(num_bus),bus_line); 
-    begin        
-        null;
-end initBus;
+    procedure initGen(nb_bus_stop :in int;nb_bus : in int) is
+        begin 
+        NBBUSSTOP:=Integer(nb_bus_stop);
+        NBBUS:=Integer(nb_bus);
+    end initGen;    
+        
+        
+    procedure initBusStop(idBusStop : in int; x : in C_Float; y : in C_Float) is
+            position : ptrT_position :=new T_position'(float(x),float(y));
+            temp : String := integer'image(Integer(idBusStop));
+            pt: ptrString :=new String'("Arret"&" "&temp);
+            A1 : ptrT_busStop; 
+            i :integer := integer(idBusStop);
+        begin
+            A1:=new BusStop(Integer(idBusStop),pt,position);
+            tab_BusStop(i):=A1;
+    end initBusStop;
+        
+        
+    procedure initBus(num_bus : int;bus_line : ptrT_Line) is
+        B1 : ptrT_bus;    
+        num:integer := integer(num_bus); 
+        begin        
+            B1:= new Bus(Integer(num_bus),bus_line);
+            tab_Bus(num):=B1;
+    end initBus;
+        
+    procedure sendDisplay(num_busStop :in int; chaine_affich : in string_c) is 
+            num:integer := integer(num_busStop); 
+            begin       
+                tab_BusStop(num).receiveDisplay(to_ADA(chaine_affich));
+    end sendDisplay;
 
 end init_object;
 
