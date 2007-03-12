@@ -16,7 +16,6 @@ package Bus_package is
         entry receiveTimeDelay(delay_time : in float);
         entry sendBusPosition(num_bus : in integer ; position : in T_Position);
         entry sendEmergencyCall(num_bus : in integer;emergency : in string);
-        entry appelerEmit;
     end Bus;
         
 end Bus_package;

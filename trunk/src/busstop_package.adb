@@ -5,7 +5,7 @@
 with Text_io;use Text_io;
 
 package body BusStop_package is
-    
+    package REEL_ES is new Float_Io(Float); use REEL_ES;
     
     --/***********************************************************************************************************/  
     --/******************************************Arret de bus*****************************************************/
@@ -82,11 +82,13 @@ package body BusStop_package is
                 -- == la position du bus qui appelle le emit
                 --emit appelle la methode du bus qui sette le dernier arret ou est passé le bus
                 
-                accept emit(position_bus : in T_position;is_arrived : in out boolean) do                
-                    --BusStop.returnPositionBusStop(position_t);
-                    if(position.x = position_bus.x and position.y = position_bus.y) then
-                        put_line("Bus passe pres de l'arret");
-                        is_arrived := true;
+                accept emit(position_bus : in T_position;is_arrived : in out boolean) do
+                    if( position_bus.x > (position.x - 2.0) and 
+                       position_bus.x < (position.x + 2.0) and 
+                       position_bus.y > (position.y - 2.0) and 
+                       position_bus.y < (position.y + 2.0) ) then
+                       put_line("Bus passe pres de l'arret");        
+                       is_arrived := true;
                     else
                         is_arrived := false;
                     end if;

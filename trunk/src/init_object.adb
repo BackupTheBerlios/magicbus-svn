@@ -7,13 +7,13 @@ use Text_io,BusStop_package,Interfaces.C,bus_package,common_types,common_types_b
 package body init_object is
 procedure lancement(Chaine : in String_c) is
     Seconde : constant duration := 1.0;
-    pos1 : ptrT_position:= new T_position'(15, 15);
+    pos1 : ptrT_position:= new T_position'(15.0, 15.0);
     pt : ptrString:=new String'("Arret 1");
     A1 : ptrT_busStop;
-    pos2 : ptrT_position:= new T_position'(35, 35);
+    pos2 : ptrT_position:= new T_position'(35.0, 35.0);
     pt2: ptrString :=new String'("Arret 2");
     A2 : ptrT_busStop;
-    pos3 : ptrT_position:= new T_position'(40, 40);
+    pos3 : ptrT_position:= new T_position'(40.0, 40.0);
     pt3: ptrString :=new String'("Arret 3");
     A3 : ptrT_busStop;
     bus_line : ptrT_Line;
@@ -40,7 +40,7 @@ begin
 end lancement;
 
 procedure initBusStop(name : in String_c;idBusStop : in int; x : in int; y : in int) is
-        position : ptrT_position :=new T_position'(Integer(x),Integer(y));
+        position : ptrT_position :=new T_position'(Float(x),Float(y));
         pt: ptrString :=new String'(To_ADA(name));
         A1 : BusStop_package.BusStop(Integer(idBusStop),pt,position); 
     begin

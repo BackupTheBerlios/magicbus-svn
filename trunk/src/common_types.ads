@@ -8,8 +8,8 @@ package common_types is
         type T_listHours is array (1..50) of T_hour;
 
         type T_position is record
-            x:integer;
-            y:integer;
+            x:float;
+            y:float;
         end record;  
 
         type ptrString is access String;
