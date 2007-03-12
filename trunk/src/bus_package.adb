@@ -28,6 +28,31 @@ task body Bus is
     indice_busStop : integer := 1;
 
     -- ******************************************
+    -- procédure permettant d'inverser la liste 
+    -- des arrets quand le bus fait demi-tour
+    -- ******************************************
+    procedure inverserListe (list : in out T_busStopList);
+    procedure inverserListe (list : in out T_busStopList) is
+        list_temp : T_busStopList;
+        j:integer:=1;
+    begin
+        for i in list'RANGE loop
+            if (list(list'LAST - i + list'FIRST) /= null) then
+                list_temp(j) := list(list'LAST -i + list'FIRST);
+                j:=j+1;
+            end if;
+        end loop;
+        for i in list'RANGE loop
+            list(i):=list_temp(i);
+        end loop;
+        --quand on fait demi-tour, le dernier arret capté est le terminus. 
+        -- c'est aussi le point de départ du bus dans l'autre sens
+        lastBusStopCapted := nextBusStop;
+        indice_busStop:=2;
+        nextBusStop:=list(2);
+    end inverserListe ;
+    
+    -- ******************************************
     -- Déclaration des taches et objets protégés
     -- ******************************************
     
@@ -111,48 +136,6 @@ task body Bus is
     -- declaration du corps des objets protegés et des taches
     -- ******************************************************
     
-    -- ***************************************
-    -- *************Speed_Control*************  
-    -- ***************************************  
-    protected body Speed_Control is 
-        entry ACCELERATE when speed < 50 is
-            begin
-            speed:=speed + 5;
-            put("speed : ") ;
-            put_line(integer'image(speed));
-        end ACCELERATE;
-            
-        entry DECELERATE when speed > 5 is
-        begin
-            speed:=speed - 5;
-            put("speed : ") ;
-            put_line(integer'image(speed));
-        end DECELERATE;
-            
-        entry START when speed = 0 is
-            begin
-            speed:=25;
-                put("speed : ") ;
-            put_line(integer'image(speed));
-        end START;
-            
-        entry STOP when speed > 0 is
-        begin
-            put_line("arret du bus ...");
-            while(speed > 0) loop
-                speed:= speed - 5;
-                    put("speed : ") ;
-                put_line(integer'image(speed));
-            end loop;       
-        end STOP;
-        
-        procedure ReturnSpeed (current_speed : out integer) is
-            begin
-            current_speed := speed;
-        end ReturnSpeed;
-    end Speed_Control;
-
-    
     
     -- **********************************
     -- ************* Driver ************* 
@@ -186,16 +169,61 @@ task body Bus is
                 
         procedure calculateSpeed(delay_time:in float) is
         begin
-                            put_line("calculatespeed");
-                            if (delay_time<0.0)then
-                                Speed_Control.ACCELERATE;
-                            else
-                                Speed_Control.DECELERATE;
-                            end if;
-                    end calculateSpeed;
+            put_line("calculatespeed");
+            if (delay_time<0.0)then
+                Speed_Control.ACCELERATE;
+            else
+                Speed_Control.DECELERATE;
+            end if;
+        end calculateSpeed;
             
-            end Driver;
+    end Driver;
     
+    
+    -- ***************************************
+    -- *************Speed_Control*************  
+    -- ***************************************  
+    protected body Speed_Control is 
+        entry ACCELERATE when speed < 50 is
+            begin
+            speed:=speed + 5;
+            put("speed : ") ;
+            put_line(integer'image(speed));
+        end ACCELERATE;
+            
+        entry DECELERATE when speed > 5 is
+        begin
+            speed:=speed - 5;
+            put("speed : ") ;
+            put_line(integer'image(speed));
+        end DECELERATE;
+            
+        entry START when speed = 0 is
+            begin
+            speed:=30;
+                put("speed : ") ;
+            put_line(integer'image(speed));
+        end START;
+            
+        entry STOP when speed > 0 is
+        begin
+            put_line("arret du bus ...");
+            while(speed > 0) loop
+                speed:= speed - 5;
+                    put("speed : ") ;
+                put_line(integer'image(speed));
+            end loop;       
+        end STOP;
+        
+        procedure ReturnSpeed (current_speed : out integer) is
+            begin
+            current_speed := speed;
+        end ReturnSpeed;
+    end Speed_Control;
+
+    
+    
+  
     -- *********************************
     -- ************* Radio ************* 
     -- *********************************
@@ -332,22 +360,40 @@ task body Bus is
             accept TestBusStop(position : in T_Position) do
                 nextBusStop.busStop.emit(position,IS_ARRIVED_BUSSTOP);
                 if (IS_ARRIVED_BUSSTOP) then
-                        --arret du bus à l'arret
-                        Speed_control.STOP;
-                        --mise à jour du prochain arret à faire
-                        lastBusStopCapted:=nextBusStop;
-                        indice_busStop:=indice_busStop+1;
+                    --arret du bus à l'arret
+                    Speed_control.STOP;
+                    --mise à jour du prochain arret à faire
+                    lastBusStopCapted:=nextBusStop;
+                    indice_busStop:=indice_busStop+1;
+                    
+                    --test si c'est le terminus ou non
+                    if (line.busStop_List(indice_busStop) /= null) then
                         nextBusStop:=line.busStop_List(indice_busStop);
-                        lastBusStopCapted.busStop.returnPositionBusStop(position_last);
-                        nextBusStop.busStop.returnPositionBusStop(position_next);
-                        distanceBetweenBusStop := sqrt((position_last.x-position_next.x)**2 + (position_last.y-position_next.y)**2);
-                        --simulation de la montée des voyageurs
-                        delay(2.0);
                         --remise a zero de la distance parcourue
                         Odometer.raz;
-                        --on redémarre le bus
-                        Speed_control.START;
-                        IS_ARRIVED_BUSSTOP:=false;
+                        --simulation de la montée / descente des voyageurs
+                        delay(2.0);
+                    else
+                        New_line;
+                        put_line("****** TERMINUS TOUT LE MONDE DESCEND ********");
+                        New_line;
+                        inverserListe(line.BusStop_List);
+                        Driver.changeDirection;
+                        --remise a zero de la distance parcourue
+                        Odometer.raz;
+                        --terminus donc on attend un peu
+                        
+                        delay(10.0);  
+                    end if;
+                    
+                    -- recuperation des positions des 2 arrets enre lesquels se trouve le bus
+                    lastBusStopCapted.busStop.returnPositionBusStop(position_last);
+                    nextBusStop.busStop.returnPositionBusStop(position_next);
+                    -- mise à jour de la distance entre les deux arrets
+                    distanceBetweenBusStop := sqrt((position_last.x-position_next.x)**2 + (position_last.y-position_next.y)**2);
+                    --on redémarre le bus
+                    Speed_control.START;
+                    IS_ARRIVED_BUSSTOP:=false;                       
                 end if;
             end TestBusStop;
         end loop;

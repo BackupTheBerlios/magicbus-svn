@@ -87,7 +87,7 @@ package body BusStop_package is
                        position_bus.x < (position.x + 2.0) and 
                        position_bus.y > (position.y - 2.0) and 
                        position_bus.y < (position.y + 2.0) ) then
-                       put_line("Bus passe pres de l'arret");        
+                       put("Bus passe pres de l'arret numero :");put_line(integer'image(idBusStop));
                        is_arrived := true;
                     else
                         is_arrived := false;
