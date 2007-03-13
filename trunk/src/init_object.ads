@@ -23,10 +23,10 @@ package init_object is
     procedure initBus(num_bus : int;bus_line : ptrT_Line);
     pragma Export(C, initBus, "initBus");
     
-    
-    procedure lancement_bus(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c);
+
+ 	procedure lancement_bus(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c);
     pragma Export(C, lancement_bus, "lancement_bus");
     
-    procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array;idline : in int;bus_line : out ptrT_Line);
-    
+    procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array; idline : int;bus_line : out ptrT_Line);
+    --procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array);
 end init_object;
