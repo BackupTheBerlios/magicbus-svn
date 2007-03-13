@@ -70,8 +70,6 @@ end lancement;
             num:integer := integer(num_busStop); 
             begin       
                 tab_BusStop(num).receiveDisplay(to_ADA(chaine_affich));
-                put_line("avant le parsing");
-                --deserialize(3,chaine_affich);
     end sendDisplay;
     
      procedure lancement_bus(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c) is
@@ -86,7 +84,7 @@ end lancement;
     -- et un booleen (required)
     -- la chaine sérialisée sera de la forme : int;bool/int;bool/int;bool/
     procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array; idline : int;bus_line : out ptrT_Line) is
-    --procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array) is  
+    
         i : Integer := 1;
         j : Integer := 1;
         k : Integer := 1; 
@@ -106,8 +104,8 @@ end lancement;
         toto : Integer := chaineDep'length +1;
     
     begin
-        put_line("on commence le parsing ");
-        
+   
+        put_line(chaineDep);
         while(i < toto) loop
             
             if(chaineDep(i) = '/') then
@@ -141,21 +139,16 @@ end lancement;
                 k := k+1; 
            end if;         
         end loop;
-        
         i := 1;
         while(i < compteur_tab) loop
             entier := Integer'Value(tab(1,i));
             booleen := (tab(2,i) = "1 ");
-            put_line(Boolean'Image(booleen));
             ptr:=new T_busStopRecord'(tab_BusStop(entier),booleen);
             arr(i):= ptr;
             i :=i+1;
         end loop;
-        
         bus_line := new T_Line'(Integer(idline),arr);
-           
-            
-        put_line("fin boucle");   
+       
     end deserialize;
 
 end init_object;
