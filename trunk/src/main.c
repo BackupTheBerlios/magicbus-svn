@@ -42,7 +42,6 @@ void init_busStop_c(int id,float x, float y);
 //fonction C permettant de mettre a jour l'affichage d'un arret
 void affichage_arret(int num_arret, char * message);
 
-
 //Stucture contenant les informations d'un arret
 struct BusStop {
        int num;
@@ -135,7 +134,7 @@ int main(int argc, char *argv[]){
     //test d'affichage sur un arret
     affichage_arret(1,"J'affiche sur l'arret 1");
     
-    lancement("TEST POUR FLOFLO");
+    //lancement("TEST POUR FLOFLO");
     /**************************************************************************/
     /************************Creation d'une ligne**c***************************/
     /**************************************************************************/
@@ -152,7 +151,7 @@ int main(int argc, char *argv[]){
        i++;
     }
     init_bus_c(1,L1);
-    printf("yop");
+
     
     
     /*res=pthread_create(&id_thread,NULL,(void *) init_busStop_c,i);
@@ -183,35 +182,50 @@ void init_busStop_c(int id, float x, float y)
 //fonction C qui serialise le type ligne, le passe a l'ADA pour creer le bus
 void init_bus_c(int id_bus,struct Line L)
 {
-   
-     char * l=serialiser(L);
-     
-     printf("res");
-     printf(l);
+     char * l;
+     l=serialiser(L);
 }
 
 //serialise une ligne en char * pour la passer a l'ADA
 char * serialiser(struct Line L)
 {
-     char * separator="/";
      int i=0;
-     char * id;
-     char * resultat=malloc(500);
-     char * temp="true";
+     char * resultat="";
+     char * tempbool="0";
+     char * tmp1;
+     char * tmp2;
+     int taille=0;
      while(i<L.nb_arret)
      {
-          if(L.tab_BusRoad[i].required==TRUE)
+          if(L.tab_BusRoad[i].required)
           {
-           temp="true";
+           tempbool="1";
           }
           else
           {
-           temp="false"; 
+           tempbool="0";
           }
-          //snprintf (id, sizeof(id), "%d", L.tab_BusRoad[i].id_busStop ); 
-          sprintf(resultat,"%s%s",resultat,id);
-          //sprintf(resultat,"%s%s",separator,temp);
-          i++;            
+          //on libere puis on realloue les variables temporaires
+          free(tmp1);
+          free(tmp2);
+          tmp1=(char*)malloc( sizeof(L.tab_BusRoad[i].id_busStop)+4 );
+          tmp2=(char*)malloc( strlen(resultat)*4+sizeof(L.tab_BusRoad[i].id_busStop)+4);
+
+          //On creer la chaine a concatener
+          sprintf(tmp1,"%d;%s/",L.tab_BusRoad[i].id_busStop,tempbool);
+
+          //on copie les chaines déjà sauvegardées
+          strcpy(tmp2,resultat);
+          //on rajoute la portion en cours
+          strcat(tmp2,tmp1);
+          //on replace le tout dans la variable à retourner
+          free(resultat);
+          resultat=(char*)malloc(strlen(tmp2));
+          strcpy(resultat,tmp2);
+         i++;
+
      }
+
+
      return resultat;
 }
