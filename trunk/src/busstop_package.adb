@@ -38,7 +38,7 @@ package body BusStop_package is
         --/******************************************Emmettor de l'arret**********************************************/
         --/***********************************************************************************************************/
         task Emettor is
-            entry emit (position_bus : in T_position;is_arrived : in out boolean);      
+            entry emit (num_bus : in integer;position_bus : in T_position;is_arrived : in out boolean);      
         end Emettor; 
         
         --/***********************************************************************************************************/  
@@ -82,12 +82,14 @@ package body BusStop_package is
                 -- == la position du bus qui appelle le emit
                 --emit appelle la methode du bus qui sette le dernier arret ou est passé le bus
                 
-                accept emit(position_bus : in T_position;is_arrived : in out boolean) do
-                    if( position_bus.x > (position.x - 2.0) and 
-                       position_bus.x < (position.x + 2.0) and 
-                       position_bus.y > (position.y - 2.0) and 
-                       position_bus.y < (position.y + 2.0) ) then
-                       put("Bus passe pres de l'arret numero :");put_line(integer'image(idBusStop));
+                accept emit(num_bus : in integer; position_bus : in T_position;is_arrived : in out boolean) do
+                    if( position_bus.x > (position.x - 8.0) and 
+                       position_bus.x < (position.x + 8.0) and 
+                       position_bus.y > (position.y - 8.0) and 
+                       position_bus.y < (position.y + 8.0) ) then
+                       New_line;
+                       put_line("Bus " & integer'image(num_bus) & " passe pres de l'arret numero " &integer'image(idBusStop));
+                       New_line;
                        is_arrived := true;
                     else
                         is_arrived := false;
@@ -102,8 +104,8 @@ package body BusStop_package is
         
         loop
             select
-                accept emit(position_bus : in T_position;is_arrived : in out boolean) do
-                          Emettor.emit(position_bus,is_arrived);
+                accept emit(num_bus : in integer; position_bus : in T_position;is_arrived : in out boolean) do
+                          Emettor.emit(num_bus,position_bus,is_arrived);
                      end emit;
                 or
                      accept receiveDisplay(toDisplay : in String) do
