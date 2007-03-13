@@ -14,7 +14,6 @@
 /***************Fonction externe appelé dans l'ADA*****************************/
 /******************************************************************************/
 
-extern void lancement(char * s);
 
 //fonction initialisant l'environnement ADA/C
 extern void adainit();
@@ -152,6 +151,19 @@ int main(int argc, char *argv[]){
     }
     init_bus_c(1,L1);
 
+    /*
+    L1.id_line=2;
+    i=0;
+    L1.nb_arret=5;
+    //on charge tous les arrêts dans la ligne 2
+    while (i<5)
+    {
+       b.required=TRUE;
+       b.id_busStop=i;
+       L1.tab_BusRoad[i]=b;
+       i++;
+    }
+    init_bus_c(2,L1);*/
     
     
     /*res=pthread_create(&id_thread,NULL,(void *) init_busStop_c,i);
