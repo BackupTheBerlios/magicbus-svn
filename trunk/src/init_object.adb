@@ -71,6 +71,15 @@ end lancement;
             begin       
                 tab_BusStop(num).receiveDisplay(to_ADA(chaine_affich));
     end sendDisplay;
+    
+    
+    
+    -- procedure de désérialisation
+    procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array;bus_line : out ptrT_Line) is
+        
+    begin
+        null;
+    end deserialize;
 
 end init_object;
 

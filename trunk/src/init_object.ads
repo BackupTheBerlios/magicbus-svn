@@ -22,4 +22,8 @@ package init_object is
     pragma Export(C, initBusStop, "initBusStop");
     procedure initBus(num_bus : int;bus_line : ptrT_Line);
     pragma Export(C, initBus, "initBus");
+    
+    
+    procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array;bus_line : out ptrT_Line);
+    
 end init_object;
