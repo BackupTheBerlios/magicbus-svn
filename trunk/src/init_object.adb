@@ -73,9 +73,15 @@ end lancement;
     end sendDisplay;
     
     
-    
+    procedure lancement_bus(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c) is
+    bus_line :ptrT_Line;
+    begin
+        deserialize(nb_arret,chaine_route,id_line,bus_line);
+        initBus(id_bus,bus_line);
+    end lancement_bus;        
+            
     -- procedure de désérialisation
-    procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array;bus_line : out ptrT_Line) is
+    procedure deserialize(nb_occurence : in int; chaineSerial : in Char_Array;idline : in int;bus_line : out ptrT_Line) is
         
     begin
         null;
