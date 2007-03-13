@@ -184,6 +184,7 @@ void init_bus_c(int id_bus,struct Line L)
 {
      char * l;
      l=serialiser(L);
+     lancement_bus(id_bus,L.id_line,L.nb_arret,l);
 }
 
 //serialise une ligne en char * pour la passer a l'ADA
