@@ -108,17 +108,17 @@ int main(int argc, char *argv[]){
        }     
        else
        {
-               nb_alea = (rand()%13);
+               nb_alea = (rand()%71);
                if( nb_alea%2==0)
                {
                    tab_BusStop[i].x+=tab_BusStop[i-1].x+(float)nb_alea;
-                   nb_alea = rand()%13;               
+                   nb_alea = rand()%71;               
                    tab_BusStop[i].y+=tab_BusStop[i-1].y+(float)nb_alea;
                }
                else
                {
                    tab_BusStop[i].x+=tab_BusStop[i-1].x+(float)nb_alea;
-                   nb_alea = rand()%13;               
+                   nb_alea = rand()%71;               
                    tab_BusStop[i].y+=tab_BusStop[i-1].y-(float)nb_alea;               
                }
                
@@ -132,17 +132,17 @@ int main(int argc, char *argv[]){
     
     //test d'affichage sur un arret
     affichage_arret(1,"J'affiche sur l'arret 1");
-    
-    //lancement("TEST POUR FLOFLO");
+
+
     /**************************************************************************/
     /************************Creation d'une ligne**c***************************/
     /**************************************************************************/
     
     L1.id_line=1;
     i=0;
-    L1.nb_arret=20;
+    L1.nb_arret=3;
     //on charge tous les arrêts dans la ligne 1
-    while (i<20)
+    while (i<3)
     {
        b.required=TRUE;
        b.id_busStop=i;
