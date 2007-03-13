@@ -29,6 +29,8 @@ extern void initGen(int nb_busstop, int nb_bus);
 //fonction permettant d'instancier un bus stop
 extern void initBusStop(int id, float x, float y);
 
+//fonction permettant d'instancier un bus stop
+extern void lancement_bus(int id_bus, int id_line, int nb_arret,char * chaine_serial);
 
 //fonction qui permet de mettre a jour l'ecran sur les arret de bus
 extern void sendDisplay(int num_arret,char * message);
