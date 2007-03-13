@@ -76,6 +76,7 @@ end lancement;
     bus_line :ptrT_Line;
     begin
         deserialize(nb_arret,chaine_route,id_line,bus_line);
+       
         initBus(id_bus,bus_line);
     end lancement_bus; 
     
@@ -89,11 +90,10 @@ end lancement;
         j : Integer := 1;
         k : Integer := 1; 
         compteur_tab : Integer := 1; 
-        ptr : ptrT_busStopRecord;
         arr : T_busStopList;
         entier : Integer;
         booleen : Boolean;
-
+       
         
         nb_occurence_i : Integer := Integer(nb_occurence);
         Type tableau is array (1..2,1..nb_occurence_i) of String(1..2);
@@ -101,12 +101,12 @@ end lancement;
         chaineDep : String := to_ADA(chaineSerial);
         element : String:= "  "; -- element courant de la structure (un int =>2caracteres , bool => 1caratere : 1 == true)
          
-        toto : Integer := chaineDep'length +1;
+        lg_string : Integer := chaineDep'length +1;
     
     begin
    
-        put_line(chaineDep);
-        while(i < toto) loop
+        
+        while(i < lg_string) loop
             
             if(chaineDep(i) = '/') then
                 if(k = 1) then
@@ -117,10 +117,9 @@ end lancement;
                 j := 1;
                 k := 1;
                 tab(2,compteur_tab) := element;
-                --put_line(tab(2,compteur_tab)); 
                 element := "  ";
                 compteur_tab := compteur_tab + 1;
-            --end if;   
+              
             elsif(chaineDep(i) = ';')then
                 if(k = 1) then
                     element(2) := element(1);
@@ -130,7 +129,6 @@ end lancement;
                 j := 1;
                 k := 1;
                 tab(1,compteur_tab) := element;
-                --put_line(tab(1,compteur_tab)); 
                 element := "  "; 
             else
                 element(j) := chaineDep(i); 
@@ -141,14 +139,17 @@ end lancement;
         end loop;
         i := 1;
         while(i < compteur_tab) loop
-            entier := Integer'Value(tab(1,i));
+            
+            entier := Integer'Value(tab(1,i));    
+         
             booleen := (tab(2,i) = "1 ");
-            ptr:=new T_busStopRecord'(tab_BusStop(entier),booleen);
-            arr(i):= ptr;
+            
+            arr(i):= new T_busStopRecord'(tab_BusStop(entier+1),booleen);
             i :=i+1;
         end loop;
+        
         bus_line := new T_Line'(Integer(idline),arr);
-       
+        
     end deserialize;
 
 end init_object;
