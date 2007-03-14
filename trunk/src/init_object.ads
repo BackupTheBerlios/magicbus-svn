@@ -40,9 +40,13 @@ package init_object is
     --procedure qui instancie un bus dans le reseau 
     procedure initBus(num_bus : int;bus_line : ptrT_Line);
     
-    --procédure appelé depuis le centre pour créer un bus
+    --procédure appelée depuis le centre pour créer un bus
  	procedure lancement_bus(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c);
     pragma Export(C, lancement_bus, "lancement_bus");
+    
+    --procédure appelée depuis le centre pour informer un bus de son avance ou son retard
+    procedure sendDelay(id_bus : int;delay_t : in C_Float);
+    pragma Export(C, sendDelay, "sendDelay");
     
     -- procedure de désérialisation : nb_occurence == nb de "/" qui séparent les concaténations de structures
     -- les éléments de la structures sont séparés par des ";" : les structures passées sont des pointeurs sur des bus_stop

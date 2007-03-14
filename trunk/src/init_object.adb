@@ -42,6 +42,7 @@ package body init_object is
             B1:= new Bus(Integer(num_bus),bus_line);
             --stockage dans le tableau pour réutilisation
             tab_Bus(num):=B1;
+            tab_Bus(num).sendEmergencyCall(1,"dsogjkdolgfdj");
     end initBus;
     
     --methode appelé par le centre pour l'affichage d'un message sur un arret    
@@ -61,6 +62,14 @@ package body init_object is
         --on lance l'instanciation du bus dans le reseau
         initBus(id_bus,bus_line);
     end lancement_bus; 
+    
+    --procédure appelée depuis le centre pour informer un bus de son avance ou son retard
+    procedure sendDelay(id_bus : int;delay_t : in C_Float) is
+        num:integer := integer(id_bus); 
+    begin
+        tab_Bus(num).receiveTimeDelay(Float(delay_t));        
+    end sendDelay;
+    
     
     -- procedure de désérialisation : nb_occurence == nb de "/" qui séparent les concaténations de structures
     -- les éléments de la structures sont séparés par des ";" : les structures passées sont des pointeurs sur des bus_stop

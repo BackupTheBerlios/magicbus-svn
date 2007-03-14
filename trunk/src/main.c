@@ -34,6 +34,9 @@ extern void lancement_bus(int id_bus, int id_line, int nb_arret,char * chaine_se
 //fonction qui permet de mettre a jour l'ecran sur les arret de bus
 extern void sendDisplay(int num_arret,char * message);
 
+//fonction permettant d'envoyer l'avance/retard a un  bus
+extern void sendDelay(int id_bus, float delay_t);
+
 //fonction C permettant de recevoir des bus leur position, appel de calculatedelay qui
 //permet de verifier si le bus est en retard et lui communiquer son avance/retard
 void receivePosition(int id_bus, float x, float y, float x_last, float y_last);
@@ -43,6 +46,10 @@ void init_busStop_c(int id,float x, float y);
 
 //fonction C permettant de mettre a jour l'affichage d'un arret
 void affichage_arret(int num_arret, char * message);
+
+//fonction C qui calcule si le bus est en avance ou en retard, le communique par la "radio" 
+// au bus en question et met a jour l'affichage des arrêts de bus concernés (retard, ...)
+void calculateDelay(void * arg);
 
 //Stucture contenant les informations d'un arret
 struct BusStop {
@@ -85,16 +92,27 @@ void init_bus_c(int id_bus, struct Line L);
 //serialise une ligne en char * pour la passer a l'ADA
 char * serialiser(struct Line L);
 
+struct param
+    {
+           int id_bus;
+           float x_courant;
+           float y_courant;
+           float x_dernier;
+           float y_dernier;       
+    };
 
 //main du simulateur
 int main(int argc, char *argv[]){
     
     
-    pthread_t id_thread;
     int res;
     int i=1;
+    int j;
+    int arret_depart;
     struct Line L1;
+    struct Line L2;
     struct Bus_road b;
+    struct Bus_road b2;
     int nb_alea;
     
     
@@ -152,41 +170,36 @@ int main(int argc, char *argv[]){
     /**************************************************************************/
     
     L1.id_line=1;
-    i=0;
+    arret_depart=0;
     L1.nb_arret=3;
+    j=arret_depart;
     //on charge tous les arrêts dans la ligne 1
-    while (i<3)
+    while (j<(L1.nb_arret+arret_depart))
     {
        b.required=TRUE;
-       b.id_busStop=i;
-       L1.tab_BusRoad[i]=b;
-       i++;
+       b.id_busStop=j;
+       L1.tab_BusRoad[(j-arret_depart)]=b;
+       j++;
     }
     init_bus_c(1,L1);
 
-    /*
-    L1.id_line=2;
-    i=0;
-    L1.nb_arret=5;
+    //2 eme bus a instancier si on veut faire mumuz
+    
+    
+    /*L2.id_line=2;
+    arret_depart=3;
+    j=arret_depart;
+    L2.nb_arret=3;
     //on charge tous les arrêts dans la ligne 2
-    while (i<5)
+    while (j<(L2.nb_arret+arret_depart))
     {
-       b.required=TRUE;
-       b.id_busStop=i;
-       L1.tab_BusRoad[i]=b;
-       i++;
+       b2.required=TRUE;
+       b2.id_busStop=j;
+       L2.tab_BusRoad[(j-arret_depart)]=b2;
+       j++;
     }
-    init_bus_c(2,L1);*/
-    
-    
-    /*res=pthread_create(&id_thread,NULL,(void *) init_busStop_c,i);
-    if (res!=0)
-    {
-       printf("error");
-       exit(2);
-    }
-    //pthread_join(id_thread,NULL);*/
-    
+    init_bus_c(2,L2);*/
+      
     //appel de la terminaison Ada/C
     adafinal();
     return 0;
@@ -196,9 +209,28 @@ int main(int argc, char *argv[]){
 //permet de verifier si le bus est en retard et lui communiquer son avance/retard
 void receivePosition(int id_bus, float x, float y, float x_last, float y_last)
 {
-     printf("Le centre recois la position du bus %d\n",id_bus);
-     //on a la position courante et la position du dernier arret qu'on vient de passer
-     //il faut calculer le delai de retard/avance à partir des horaires
+    struct param p;
+    int res;
+    pthread_t id_thread;
+    p.id_bus=id_bus;
+    p.x_courant=x;
+    p.y_courant=y;
+    p.x_dernier=x_last;
+    p.y_dernier=y_last;
+    
+    //on a la position courante et la position du dernier arret qu'on vient de passer
+    //il faut calculer le delai de retard/avance à partir des horaires
+    res=pthread_create(&id_thread,NULL,(void *) calculateDelay,&p);
+    if (res!=0)
+    {
+       printf("error");
+       exit(2);
+    }
+    //pthread_join(id_thread,NULL);*/
+     printf("Le centre recoit la position du bus %d\n",id_bus);
+    
+    
+     
 }
 
 //fonction c qui permet d'appeller un fonction ADA de mise a jour de l'affichage sur un arret donné
@@ -223,6 +255,17 @@ void init_bus_c(int id_bus,struct Line L)
      tab_Bus[id_bus]=b;
      l=serialiser(L);
      lancement_bus(id_bus,L.id_line,L.nb_arret,l);
+}
+
+
+//fonction C qui calcule si le bus est en avance ou en retard, le communique par la "radio" 
+// au bus en question et met a jour l'affichage des arrêts de bus concernés (retard, ...)
+void calculateDelay(void * arg)
+{
+     struct param * pa = (struct param *) arg;
+     //on calcule le delay MARTIAL ToDO DEMERDE TOI :p
+     //appel de delay pour floflo -> je t'a***
+     sendDelay((*pa).id_bus,-2.0);
 }
 
 //serialise une ligne en char * pour la passer a l'ADA
