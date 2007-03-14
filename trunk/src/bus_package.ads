@@ -2,15 +2,15 @@
 --                              Bus_Package.ads                                                        --
 --                                                                                                     --
 ---------------------------------------------------------------------------------------------------------
-with text_io,common_types,common_types_busStop,Ada.Numerics.Elementary_Functions;
-use Ada.Numerics.Elementary_Functions,text_io,common_types,common_types_busStop;
+with text_io,common_types,common_types_busStop,Ada.Numerics.Elementary_Functions,Interfaces.c;
+use Ada.Numerics.Elementary_Functions,text_io,common_types,common_types_busStop,Interfaces.c;
 
 
 package Bus_package is
 	type T_direction is (Aller,Retour);
-    
+    procedure receivePosition(id_bus:in int;x : in C_float ; y :in C_float;x_last : in C_float ; y_last :in C_float);
+    pragma import(C, receivePosition, "receivePosition");
     task  type Bus (num_bus : integer;bus_line : ptrT_Line) is
---        (bus_line : ptrT_Line)
         entry changeLine(new_line : in ptrT_line);
         entry changeDirection;
         entry receiveTimeDelay(delay_time : in float);

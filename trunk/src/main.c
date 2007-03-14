@@ -34,6 +34,9 @@ extern void lancement_bus(int id_bus, int id_line, int nb_arret,char * chaine_se
 //fonction qui permet de mettre a jour l'ecran sur les arret de bus
 extern void sendDisplay(int num_arret,char * message);
 
+//fonction C permettant de recevoir des bus leur position, appel de calculatedelay qui
+//permet de verifier si le bus est en retard et lui communiquer son avance/retard
+void receivePosition(int id_bus, float x, float y, float x_last, float y_last);
 
 //fonction C lancant l'instanciation ADA d'un arret de bus
 void init_busStop_c(int id,float x, float y);
@@ -65,6 +68,16 @@ struct Line
     int nb_arret;
     struct Bus_road tab_BusRoad[50];  
 };
+
+struct Bus
+{
+       int id_bus;
+       struct Line l;      
+};
+
+//tableau de bus necessaire pour manipulation dans le centre
+struct Bus tab_Bus[NBBUS];
+
 
 //fonction C permettant de serialiser la ligne pour la passer a l'ADA et creation du bus
 void init_bus_c(int id_bus, struct Line L);
@@ -179,22 +192,35 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+//fonction C permettant de recevoir des bus leur position, appel de calculatedelay qui
+//permet de verifier si le bus est en retard et lui communiquer son avance/retard
+void receivePosition(int id_bus, float x, float y, float x_last, float y_last)
+{
+     printf("Le centre recois la position du bus %d\n",id_bus);
+     //on a la position courante et la position du dernier arret qu'on vient de passer
+     //il faut calculer le delai de retard/avance à partir des horaires
+}
+
 //fonction c qui permet d'appeller un fonction ADA de mise a jour de l'affichage sur un arret donné
 void affichage_arret(int num_arret,char * message)
 {
-   sendDisplay(num_arret,message);
+     sendDisplay(num_arret,message);
 }
 
 //fonction C lancant l'instanciation d'un arret
 void init_busStop_c(int id, float x, float y)
 {
-   initBusStop(id,x,y);
+  initBusStop(id,x,y);
 }
 
 //fonction C qui serialise le type ligne, le passe a l'ADA pour creer le bus
 void init_bus_c(int id_bus,struct Line L)
 {
      char * l;
+     struct Bus b;
+     b.id_bus=id_bus;
+     b.l=L;
+     tab_Bus[id_bus]=b;
      l=serialiser(L);
      lancement_bus(id_bus,L.id_line,L.nb_arret,l);
 }
