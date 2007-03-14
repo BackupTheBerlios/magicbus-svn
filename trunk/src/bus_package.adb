@@ -444,6 +444,7 @@ begin
         or
             accept sendBusPosition(num_bus : in integer; position : in T_position) do
                 New_line;--appel à la radio du centre
+                receivePosition(int(num_bus),c_float(position.x),c_float(position.y),c_float(position_last.x),c_float(position_last.y));
             end sendBusPosition;
         or
             accept receiveTimeDelay(delay_time : in float) do
