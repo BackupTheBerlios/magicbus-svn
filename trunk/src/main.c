@@ -37,6 +37,9 @@ extern void sendDisplay(int num_arret,char * message);
 //fonction permettant d'envoyer l'avance/retard a un  bus
 extern void sendDelay(int id_bus, float delay_t);
 
+//fonction du centre qui simule qu'un bus a une urgence
+extern void simulateEmergency(int id_bus,char * message);
+
 //fonction C permettant de recevoir des bus leur position, appel de calculatedelay qui
 //permet de verifier si le bus est en retard et lui communiquer son avance/retard
 void receivePosition(int id_bus, float x, float y, float x_last, float y_last);
@@ -47,9 +50,15 @@ void init_busStop_c(int id,float x, float y);
 //fonction C permettant de mettre a jour l'affichage d'un arret
 void affichage_arret(int num_arret, char * message);
 
+//fonction C qui capte les messages d'urgence d'un bus et effectue le traitement associé
+void receiveEmergency(int id_bus, char * message, float x, float y);
+
 //fonction C qui calcule si le bus est en avance ou en retard, le communique par la "radio" 
 // au bus en question et met a jour l'affichage des arrêts de bus concernés (retard, ...)
 void calculateDelay(void * arg);
+
+//fonction C qui selon l'urgence recalcule l'itinéraire du bus
+void calculateRoute(void * arg);
 
 //Stucture contenant les informations d'un arret
 struct BusStop {
@@ -99,6 +108,14 @@ struct param
            float y_courant;
            float x_dernier;
            float y_dernier;       
+    };
+    
+struct param2
+    {
+           int id_bus;
+           float x_courant;
+           float y_courant;
+           char * message;       
     };
 
 //main du simulateur
@@ -182,6 +199,10 @@ int main(int argc, char *argv[]){
        j++;
     }
     init_bus_c(1,L1);
+    
+    sleep(12000);
+    //on simule une urgence sur le bus 1
+    simulateEmergency(1,"Probleme de freins");
 
     //2 eme bus a instancier si on veut faire mumuz
     
@@ -266,6 +287,36 @@ void calculateDelay(void * arg)
      //on calcule le delay MARTIAL ToDO DEMERDE TOI :p
      //appel de delay pour floflo -> je t'a***
      sendDelay((*pa).id_bus,-2.0);
+}
+
+//fonction C qui capte les messages d'urgence d'un bus et effectue le traitement associé
+void receiveEmergency(int id_bus, char * message, float x, float y)
+{
+    int res;
+    struct param2 p;
+    pthread_t id_thread;
+    p.id_bus=id_bus;
+    p.message=message;
+    p.x_courant=x;
+    p.y_courant=y;
+    //on thread pour traiter en parallele les demandes d'urgence
+    res=pthread_create(&id_thread,NULL,(void *) calculateRoute,&p);
+    if (res!=0)
+    {
+       printf("error");
+       exit(2);
+    }
+    //pthread_join(id_thread,NULL);*/
+     printf("Le centre recoit une urgence du bus : %d\n",id_bus);
+}
+
+//fonction C qui selon l'urgence recalcule l'itinéraire du bus
+void calculateRoute(void * arg)
+{
+     struct param2 * pa = (struct param2 *) arg;
+     char * message=(*pa).message;
+     //on calcule la route MARTIAL ToDO DEMERDE TOI :p
+     printf("Le message d'urgence est : %s\n",message);    
 }
 
 //serialise une ligne en char * pour la passer a l'ADA

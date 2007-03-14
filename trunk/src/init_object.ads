@@ -48,6 +48,10 @@ package init_object is
     procedure sendDelay(id_bus : int;delay_t : in C_Float);
     pragma Export(C, sendDelay, "sendDelay");
     
+    --procédure appelée depuis le centre pour simuler un appel d'urgence d'un bus
+    procedure simulateEmergency(id_bus : int;message : in String_c);
+    pragma Export(C, simulateEmergency, "simulateEmergency");
+    
     -- procedure de désérialisation : nb_occurence == nb de "/" qui séparent les concaténations de structures
     -- les éléments de la structures sont séparés par des ";" : les structures passées sont des pointeurs sur des bus_stop
     -- et un booleen (required)

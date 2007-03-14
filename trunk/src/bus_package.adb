@@ -269,9 +269,8 @@ task body Bus is
         protected body EmergencyChannel is
             procedure sendEmergencyCall(num_bus : in integer; emergency : in string) is
             begin
-                put_line("envoie d'un message d'urgence ");
-                Bus.sendEmergencyCall(num_bus,emergency);
                 --appel a la radio du centre pour qu'il le reçoive...
+                receiveEmergency(int(num_bus),to_c(emergency),c_float(position.x),c_float(position.y));
             end sendEmergencyCall;
         end EmergencyChannel;
         
@@ -279,7 +278,9 @@ task body Bus is
         loop   
             select
                 accept sendEmergencyCall(num_bus : in integer; emergency : in string) do
+                    put_line(emergency);
                     EmergencyChannel.sendEmergencyCall(num_bus,emergency);
+                    
                 end sendEmergencyCall;
             or 
                 accept sendBusPosition (num_bus : in integer;position : in T_Position) do
@@ -438,8 +439,8 @@ begin
 	loop
         select
             accept sendEmergencyCall(num_bus : in integer; emergency : in string) do
-                put_line("envoi d'un message d'urgence bus");
-                --appel à la radio du centre
+               --utilisation de la radio pour appel d'urgence
+                Radio.sendEmergencyCall(num_bus,emergency);
             end sendEmergencyCall;
         or
             accept sendBusPosition(num_bus : in integer; position : in T_position) do

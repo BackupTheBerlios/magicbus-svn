@@ -42,7 +42,6 @@ package body init_object is
             B1:= new Bus(Integer(num_bus),bus_line);
             --stockage dans le tableau pour réutilisation
             tab_Bus(num):=B1;
-            tab_Bus(num).sendEmergencyCall(1,"dsogjkdolgfdj");
     end initBus;
     
     --methode appelé par le centre pour l'affichage d'un message sur un arret    
@@ -69,6 +68,14 @@ package body init_object is
     begin
         tab_Bus(num).receiveTimeDelay(Float(delay_t));        
     end sendDelay;
+    
+    --procédure appelée depuis le centre pour simuler un appel d'urgence d'un bus
+    procedure simulateEmergency(id_bus : int;message : in String_c) is
+        num:integer := integer(id_bus); 
+    begin      
+          
+        tab_Bus(num).sendEmergencyCall(num,to_ada(message)); 
+    end simulateEmergency;
     
     
     -- procedure de désérialisation : nb_occurence == nb de "/" qui séparent les concaténations de structures
