@@ -29,7 +29,8 @@ task body Bus is
     indice_busStop : integer := 1;
     
     speed:integer:=0;
-
+    covered_distance : float:=0.0;
+    
     --unite graphique
     unite_graph:float:=10.0;
 
@@ -314,8 +315,8 @@ task body Bus is
     -- ************* Bus Odometer *************
     -- **************************************** 
     task body Odometer is
-        covered_distance : float:=0.0;
-        cycleTime : constant duration := 2.0;
+        
+        cycleTime : constant duration := 1.0;
         time : integer;
 
         procedure update(cycle_time : in integer;speed : in integer); 
@@ -359,9 +360,8 @@ task body Bus is
     -- ************* Bus Controller ************* 
     -- ******************************************
     task body Bus_Controller is  
-
         procedure calculatePosition(distance:in float);    
-              
+        
         procedure calculatePosition(distance:in float) is
             rapport : float;
         begin
@@ -370,16 +370,17 @@ task body Bus is
             position.x:=position_last.x + rapport*(position_next.x - position_last.x);
             position.y:=position_last.y + rapport*(position_next.y - position_last.y);
             Sensor.TestBusStop(position);
-            Radio.sendBusPosition (id_bus,position);
+
         end calculatePosition;
+       
         
-        Seconde : constant duration :=2.0;
+        CycleTime : constant duration :=10.0;
         distance : float;
     begin   
         loop
-            delay(Seconde);
-            Odometer.returnDistance(distance);
-            calculatePosition(distance);
+            delay(CycleTime);
+            calculatePosition(covered_distance);
+            Radio.sendBusPosition(id_bus,position);
        end loop; 
     end Bus_Controller;
     
