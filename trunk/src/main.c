@@ -5,8 +5,10 @@
 /******************************************************************************/
 /******************************************************************************/
 #include <pthread.h>
+#include <time.h>
+#include <math.h>
 #define NBBUSSTOP 20
-#define NBBUS 10
+#define NBBUS 2
 #define TRUE  1
 #define FALSE 0
 #define bool  int
@@ -67,22 +69,32 @@ struct BusStop {
        float y;
 };
 
-
 //tableau d'arret de bus necessaire pour manipulation dans le centre
 struct BusStop tab_BusStop[NBBUSSTOP];
+
+//Stucture une horaire de départ pour un bus
+struct horaire {
+       int id_bus;
+       int minute;
+       int heure;
+       int seconde;
+       };
+//tableau d'arret de bus necessaire pour manipulation dans le centre
+struct horaire tab_horaires_depart[NBBUS];
 
 //Stucture contenant les informations sur le parcour du bus
 struct Bus_road {
        int id_busStop;
        bool required;
-       //faudra rajouter une liste d'horaire mais bon on verra
+       int duree;
 };
 
 struct Line 
 {
     int id_line;
     int nb_arret;
-    struct Bus_road tab_BusRoad[50];  
+    struct Bus_road tab_BusRoad[50];
+      
 };
 
 struct Bus
@@ -121,7 +133,7 @@ struct param2
 //main du simulateur
 int main(int argc, char *argv[]){
     
-    
+    int duree;
     int res;
     int i=1;
     int j;
@@ -131,8 +143,8 @@ int main(int argc, char *argv[]){
     struct Bus_road b;
     struct Bus_road b2;
     int nb_alea;
-    
-    
+    int heureActuelle=time(NULL)/3600%24+1;
+    int minuteActuelle=time(NULL)/60%60;
     printf("%s\n","Main C en route");
     //lancement de la configuration ADA/C    
     adainit();
@@ -151,8 +163,8 @@ int main(int argc, char *argv[]){
        //génération aleatoire du placement des arrêts
        if(i==0)
        {
-               tab_BusStop[i].x=5.0;
-               tab_BusStop[i].y=5.0;
+               tab_BusStop[i].x=0.0;
+               tab_BusStop[i].y=0.0;
        }     
        else
        {
@@ -185,42 +197,63 @@ int main(int argc, char *argv[]){
     /**************************************************************************/
     /************************Creation d'une ligne**c***************************/
     /**************************************************************************/
-    
+    duree=0;
     L1.id_line=1;
     arret_depart=0;
     L1.nb_arret=3;
     j=arret_depart;
+
     //on charge tous les arrêts dans la ligne 1
     while (j<(L1.nb_arret+arret_depart))
     {
        b.required=TRUE;
        b.id_busStop=j;
+       //TODO ajouter un random ?
+       b.duree=duree;
+       duree=duree+3;
        L1.tab_BusRoad[(j-arret_depart)]=b;
        j++;
     }
+    /**************************************************************************/
+    /************************Mise en place de l'heure de départ****************/
+    /**************************************************************************/
+
+    tab_horaires_depart[1].heure=heureActuelle;
+    tab_horaires_depart[1].minute=minuteActuelle;
+    tab_horaires_depart[1].seconde=time(NULL)%60;
+    tab_horaires_depart[1].id_bus=1;
     init_bus_c(1,L1);
-    
+
     sleep(12000);
     //on simule une urgence sur le bus 1
     simulateEmergency(1,"Probleme de freins");
-
+  /*
     //2 eme bus a instancier si on veut faire mumuz
     
     
-    /*L2.id_line=2;
+    L2.id_line=2;
     arret_depart=3;
     j=arret_depart;
     L2.nb_arret=3;
+    duree=0;
     //on charge tous les arrêts dans la ligne 2
     while (j<(L2.nb_arret+arret_depart))
     {
        b2.required=TRUE;
        b2.id_busStop=j;
+        //TODO ajouter un random ?
+       b2.duree=duree;
+       duree=duree+3;
        L2.tab_BusRoad[(j-arret_depart)]=b2;
        j++;
     }
+   tab_horaires_depart[2].heure=heureActuelle;
+   tab_horaires_depart[2].minute=minuteActuelle+1;
+   tab_horaires_depart[2].seconde=0;
+   tab_horaires_depart[2].id_bus=2;
+
     init_bus_c(2,L2);*/
-      
+
     //appel de la terminaison Ada/C
     adafinal();
     return 0;
@@ -238,18 +271,19 @@ void receivePosition(int id_bus, float x, float y, float x_last, float y_last)
     p.y_courant=y;
     p.x_dernier=x_last;
     p.y_dernier=y_last;
-    
     //on a la position courante et la position du dernier arret qu'on vient de passer
     //il faut calculer le delai de retard/avance à partir des horaires
     res=pthread_create(&id_thread,NULL,(void *) calculateDelay,&p);
+
     if (res!=0)
     {
        printf("error");
        exit(2);
     }
-    //pthread_join(id_thread,NULL);*/
-     printf("Le centre recoit la position du bus %d\n",id_bus);
-    
+      sleep(2000);
+     //pthread_join(id_thread,NULL);
+     //printf("Le centre recoit la position du bus %d\n",id_bus);
+
     
      
 }
@@ -283,10 +317,130 @@ void init_bus_c(int id_bus,struct Line L)
 // au bus en question et met a jour l'affichage des arrêts de bus concernés (retard, ...)
 void calculateDelay(void * arg)
 {
+ //TODO remettre l'heure de demarrage au lancement du bus
+     int indice=1;
+     int i;
+     int j=0;
+     int trouve=FALSE;
+     int id_last_busstop;
+     int duree_last_busstop;
+     int id_next_busstop;
+     int duree_next_busstop;
+     int tmpSeconde,duree_entre_deux_arrets;
+     float next_x;
+     float next_y;
+     float theoric_x,theoric_y;
+     float distance, theoric_distance;
+     float tmp,reelle_distance;
+     float resultat;
      struct param * pa = (struct param *) arg;
-     //on calcule le delay MARTIAL ToDO DEMERDE TOI :p
-     //appel de delay pour floflo -> je t'a***
-     sendDelay((*pa).id_bus,-2.0);
+     struct horaire depart_bus;
+     int heureActuelle=time(NULL)/3600%24+1;
+     int minuteActuelle=time(NULL)/60%60;
+     printf("************Reception de la position du bus %d******************\n",(*pa).id_bus);
+     //on cherche le bus ayant l'id (*pa).id_bus
+     while(tab_Bus[indice].id_bus!=(*pa).id_bus && indice<NBBUS)
+     {
+       indice++;
+     }
+     if(indice==NBBUS)
+    {
+       printf("error");
+       exit(2);
+    }
+
+
+     //On recupere l'id du dernier arret passé
+     while( trouve==FALSE && j<=NBBUSSTOP)
+     {
+      if((tab_BusStop[j].x==(*pa).x_dernier)&& (tab_BusStop[j].y==(*pa).y_dernier)) {
+            trouve=TRUE;
+            id_last_busstop=tab_BusStop[j].num;
+
+       }
+        j++;
+     }
+
+
+     //on recupere l'id du prochain arret de bus
+      trouve=FALSE;
+      i=0;
+      while( trouve==FALSE && i<=tab_Bus[indice].l.nb_arret)
+      {
+             if(tab_Bus[indice].l.tab_BusRoad[i].id_busStop==id_last_busstop)
+             {
+                duree_last_busstop=tab_Bus[indice].l.tab_BusRoad[i].duree;
+                duree_next_busstop=tab_Bus[indice].l.tab_BusRoad[i+1].duree;
+                id_next_busstop=tab_Bus[indice].l.tab_BusRoad[i+1].id_busStop;
+                trouve=TRUE;
+             }
+             i++;
+      }
+
+      //on recupere la position du prochain arret
+      trouve=FALSE;
+      j=0;
+      while( trouve==FALSE && j<=NBBUSSTOP)
+     {
+              if(id_last_busstop=tab_BusStop[j].num)
+              {
+                 trouve=TRUE;
+                 next_x=tab_BusStop[j].x;
+                 next_y=tab_BusStop[j].y;
+              }
+              j++;
+      }
+
+     //recuperation de l'heure de depart du bus
+      trouve=FALSE;
+      j=0;
+      while( trouve==FALSE && j<=NBBUS)
+     {
+              if((*pa).id_bus=tab_horaires_depart[j].id_bus)
+              {
+                 trouve=TRUE;
+                 depart_bus.minute=tab_horaires_depart[j].minute;
+                 depart_bus.heure=tab_horaires_depart[j].heure;
+                 depart_bus.seconde=tab_horaires_depart[j].seconde;
+
+              }
+              j++;
+      }
+
+     //printf(" le bus a demarrer a %d:%d\n",depart_bus.heure,depart_bus.minute);
+
+     //calcul de la distance entre les deux arrets
+     // la distance entre 2 points de coordonnées (x1,y1) et (x2,y2)
+     // est = racine_carree((x1-x2)² + (y1-y2)²)
+     //TODO verifier pkoi X 10
+     distance=sqrt(((*pa).x_dernier-next_x)*((*pa).x_dernier-next_x)+((*pa).y_dernier-next_y)*((*pa).y_dernier-next_y))*10;
+
+     //il est actuellement heureActuelle:minuteActuelle
+     //calcul de la position theorique du bus
+     duree_entre_deux_arrets=(duree_next_busstop-duree_last_busstop)*60;
+
+     //temps passé depuis le dernier arret
+     tmpSeconde = (heureActuelle*3600+minuteActuelle*60+(time(NULL))%60)- (depart_bus.heure*3600+depart_bus.minute*60+depart_bus.seconde);//duree_last_busstop*60
+
+     //on aurait donc dû parcourir theoric_distance depuis le dernier arret passé
+     theoric_distance=(float)distance*tmpSeconde/duree_entre_deux_arrets;
+
+     //or on en a parcouru
+     reelle_distance=sqrt(((*pa).x_dernier-(*pa).x_courant)*((*pa).x_dernier-(*pa).x_courant)+((*pa).y_dernier-(*pa).y_courant)*((*pa).y_dernier-(*pa).y_courant))*10;
+
+     printf("*   on a parcouru %f à la place de %f\n",reelle_distance,theoric_distance);
+
+     resultat=(float)duree_entre_deux_arrets*(theoric_distance-reelle_distance)/distance;
+     printf("*   Retard a envoyer : %f\n",resultat);
+     printf("***************************************************************\n");
+     sendDelay((*pa).id_bus,resultat);
+
+
+
+
+
+
+      //sendDelay((*pa).id_bus,-2.0);
 }
 
 //fonction C qui capte les messages d'urgence d'un bus et effectue le traitement associé
