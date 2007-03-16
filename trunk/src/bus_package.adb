@@ -325,7 +325,7 @@ task body Bus is
             covered_distance:=covered_distance + float(cycle_time) * float(speed)/3.6;
             distance_restante := distanceBetweenBusStop - covered_distance;
             put("distance parcourue : ");Put(covered_distance,4,3,0);New_line;        
-            put("distance restante : ");Put(distance_restante,4,3,0);New_line;
+           -- put("distance restante : ");Put(distance_restante,4,3,0);New_line;
         end update;
         
         procedure calculatePosition(distance:in float);    
@@ -412,7 +412,7 @@ task body Bus is
                     indice_busStop:=indice_busStop+1;
                     
                     --test si c'est le terminus ou non
-                    if (line.busStop_List(indice_busStop) /= null) then
+                    if (line.busStop_List(indice_busStop+1) /= null) then
                         nextBusStop:=line.busStop_List(indice_busStop);
                         --remise a zero de la distance parcourue
                         covered_distance := 0.0;

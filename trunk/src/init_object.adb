@@ -47,8 +47,10 @@ package body init_object is
     --methode appelé par le centre pour l'affichage d'un message sur un arret    
     procedure sendDisplay(num_busStop :in int; chaine_affich : in string_c) is 
             num:integer := integer(num_busStop); 
+            tmp : Integer := 1;
+            trouve : Boolean := FALSE;
             begin  
-                --on appelle l'entry de l'arret a partir de son id dans le tableau     
+                --on appelle l'entry de l'arret a partir de son id dans le tableau 
                 tab_BusStop(num).receiveDisplay(to_ADA(chaine_affich));
     end sendDisplay;
     
