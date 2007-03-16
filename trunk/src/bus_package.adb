@@ -172,14 +172,13 @@ task body Bus is
         procedure setListBusStop(listBusStop : in T_busStopList) is
         begin
             for K in 1..50 loop
-                --listOfBusStop(K):=listBusStop(K);
-                put_line("ok");
+                line.BusStop_List(K):= listBusStop(K);
             end loop;
         end setListBusStop;
                 
         procedure calculateSpeed(delay_time:in float) is
         begin
-            if (delay_time < 0.0 and speed < 50) then
+            if (delay_time < 0.0 and speed < 50 and distance_restante > 50.0) then
                 Speed_Control.ACCELERATE;
             else
                 if (delay_time > 0.0 and speed > 0 ) then
@@ -217,9 +216,9 @@ task body Bus is
             fin:= Seconds(Clock);
             duree:=fin-debut;
             debut:=Seconds(Clock);
-            Odometer.updateDistance(duree);
+           -- Odometer.updateDistance(duree);
             speed:=speed + 5;
-            put("speed = ") ; put_line(integer'image(speed));
+            put("acceleration speed = ") ; put_line(integer'image(speed));
         end ACCELERATE;
        
         entry DECELERATE when speed > 0 is
@@ -227,18 +226,18 @@ task body Bus is
             fin:= Seconds(Clock);
             duree:=fin-debut;
             debut:=Seconds(Clock);
-            Odometer.updateDistance(duree);
+            --Odometer.updateDistance(duree);
             speed:=speed - 5;
             put("speed : ") ;
             put_line(integer'image(speed));
         end DECELERATE;
           
-        entry STOP when distance_restante <= 8.0 is
+        entry STOP when speed > 0 is
         begin
             fin:= Seconds(Clock);
             duree:=fin-debut;
             debut:=Seconds(Clock);
-            Odometer.updateDistance(duree);
+           -- Odometer.updateDistance(duree);
             put ("Arrivée a un arret!! Il reste " );Put(distance_restante,4,3,0); put_line(" metres a parcourir");
             put_line("arret du bus ...");
             speed:=0;   
@@ -329,6 +328,21 @@ task body Bus is
             put("distance restante : ");Put(distance_restante,4,3,0);New_line;
         end update;
         
+        procedure calculatePosition(distance:in float);    
+        
+        procedure calculatePosition(distance:in float) is
+            rapport : float;
+        begin
+            --on suppose qu'une unité de position = 10 m
+            rapport := distance/distanceBetweenBusStop;
+            position.x:=position_last.x + rapport*(position_next.x - position_last.x);
+            position.y:=position_last.y + rapport*(position_next.y - position_last.y);
+            Sensor.TestBusStop(position);
+
+        end calculatePosition;
+       
+        
+        
     begin
         loop
             select
@@ -344,12 +358,14 @@ task body Bus is
                 accept updateDistance(cycle_time : in duration) do
                     time:=integer(cycle_time) mod integer(cycleTime);
                     if (time > 0) then
-                        update(time,speed); 
+                        update(time,speed);
+                        calculatePosition(covered_distance); 
                     end if;
                 end updateDistance;
             else
                 delay(cycleTime);
                 update(integer(cycleTime),speed);
+                calculatePosition(covered_distance);
             end select;
         end loop; 
        
@@ -360,26 +376,13 @@ task body Bus is
     -- ************* Bus Controller ************* 
     -- ******************************************
     task body Bus_Controller is  
-        procedure calculatePosition(distance:in float);    
-        
-        procedure calculatePosition(distance:in float) is
-            rapport : float;
-        begin
-            --on suppose qu'une unité de position = 10 m
-            rapport := distance/distanceBetweenBusStop;
-            position.x:=position_last.x + rapport*(position_next.x - position_last.x);
-            position.y:=position_last.y + rapport*(position_next.y - position_last.y);
-            Sensor.TestBusStop(position);
-
-        end calculatePosition;
        
-        
         CycleTime : constant duration :=10.0;
         distance : float;
     begin   
         loop
             delay(CycleTime);
-            calculatePosition(covered_distance);
+            
             Radio.sendBusPosition(id_bus,position);
        end loop; 
     end Bus_Controller;
@@ -397,8 +400,11 @@ task body Bus is
                 nextBusStop.busStop.emit(id_bus,position,IS_ARRIVED_BUSSTOP);
                 if (IS_ARRIVED_BUSSTOP) then
                     --arret du bus à l'arret
+                   
                     while (distance_restante > 8.0 and speed >5) loop
+                       -- put_line("apres while !!!! ");
                         Speed_control.DECELERATE;
+                      --  put_line("apres decelerate !!!! ");
                     end loop;
                     Speed_control.STOP;
                     --mise à jour du prochain arret à faire
@@ -409,7 +415,8 @@ task body Bus is
                     if (line.busStop_List(indice_busStop) /= null) then
                         nextBusStop:=line.busStop_List(indice_busStop);
                         --remise a zero de la distance parcourue
-                        Odometer.raz;
+                        covered_distance := 0.0;
+                        distance_restante := 0.0;
                         --simulation de la montée / descente des voyageurs
                         delay(2.0);
                     else
@@ -419,12 +426,12 @@ task body Bus is
                         inverserListe(line.BusStop_List);
                         Driver.changeDirection;
                         --remise a zero de la distance parcourue
-                        Odometer.raz;
+                        covered_distance := 0.0;
+                        distance_restante := 0.0;
                         --terminus donc on attend un peu
                         
                         delay(10.0);  
                     end if;
-                    
                     -- recuperation des positions des 2 arrets enre lesquels se trouve le bus
                     lastBusStopCapted.busStop.returnPositionBusStop(position_last);
                     nextBusStop.busStop.returnPositionBusStop(position_next);
@@ -481,7 +488,14 @@ begin
             accept changeDirection do
                 Driver.changeDirection;
             end changeDirection; 
-
+        or
+            accept start do
+                Speed_control.START;
+            end start;
+        or
+            accept stop do
+                Speed_control.STOP;
+            end;
         end select;
     end loop; 
  end Bus; 

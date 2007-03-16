@@ -15,6 +15,8 @@ package Bus_package is
     pragma import(C, receiveEmergency, "receiveEmergency");
     
     task  type Bus (num_bus : integer;bus_line : ptrT_Line) is
+        entry start;
+        entry stop;
         entry changeLine(new_line : in ptrT_line);
         entry changeDirection;
         entry receiveTimeDelay(delay_time : in float);
