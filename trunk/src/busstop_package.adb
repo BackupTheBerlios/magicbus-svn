@@ -83,10 +83,10 @@ package body BusStop_package is
                 --emit appelle la methode du bus qui sette le dernier arret ou est passé le bus
                 
                 accept emit(num_bus : in integer; position_bus : in T_position;is_arrived : in out boolean) do
-                    if( position_bus.x > (position.x - 8.0) and 
-                       position_bus.x < (position.x + 8.0) and 
-                       position_bus.y > (position.y - 8.0) and 
-                       position_bus.y < (position.y + 8.0) ) then
+                    if( position_bus.x > (position.x - 3.0) and 
+                       position_bus.x < (position.x + 3.0) and 
+                       position_bus.y > (position.y - 3.0) and 
+                       position_bus.y < (position.y + 3.0) ) then
                        New_line;
                        put_line("Bus " & integer'image(num_bus) & " passe pres de l'arret numero " &integer'image(idBusStop));
                        New_line;
