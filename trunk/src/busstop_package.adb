@@ -100,7 +100,7 @@ package body BusStop_package is
     begin
         
          
-        put_line("Instanciation " & name);
+        --put_line("Instanciation " & name);
         
         loop
             select

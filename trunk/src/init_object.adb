@@ -164,7 +164,6 @@ package body init_object is
             booleen := (tab(2,i) = "1 ");
             --on stocke dans le tableau d'arret le pointeur de l'arret 
             arr(i):= new T_busStopRecord'(tab_BusStop(entier),booleen);
-            put_line("valeur de entier... "&Integer'Image(entier));
             i :=i+1;
         end loop;
         --creation de la ligne pour retour

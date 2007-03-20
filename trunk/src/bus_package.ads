@@ -22,7 +22,6 @@ package Bus_package is
         entry start;
         entry stop;
         entry changeLine(new_line : in ptrT_line);
-        --entry restart(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c);
         entry restart;
         entry changeDirection;
         entry receiveTimeDelay(delay_time : in float);
