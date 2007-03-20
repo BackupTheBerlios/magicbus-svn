@@ -70,6 +70,7 @@ task body Bus is
     protected Driver is
         procedure changeLine(new_line : in ptrT_line);
         procedure changeDirection;
+        procedure restart;
         procedure setListBusStop(listBusStop : in T_busStopList);
         procedure calculateSpeed(delay_time:in float);
     private
@@ -104,6 +105,7 @@ task body Bus is
         entry receiveTimeDelay(timeDelay : in Float);
         entry sendBusPosition (num_bus : in integer; position : in T_position);
         entry sendEmergencyCall(num_bus : in integer; emergency : in string);
+        entry restart;
     end Radio;
     
     
@@ -155,7 +157,30 @@ task body Bus is
         begin
            Bus.line:=new_line.all;
         end changeLine;
+
+        procedure restart is
             
+        begin
+            --la procedure restart doit donner la nouvelle ligne au bus et le faire démarrer...
+           --Bus.line:=new_line.all;
+            covered_distance := 0.0;
+            distance_restante := 0.0;
+            nextBusStop:=line.busStop_List(2);
+            lastBusStopCapted:=line.busStop_List(1);
+            --put_line("RESTART last bus capted"&lastBusStopCapted.busStop.idBusStop);
+            nextBusStop.busStop.returnPositionBusStop(position_next);
+            lastBusStopCapted.busStop.returnPositionBusStop(position_last);
+            distanceBetweenBusStop := sqrt((position_last.x-position_next.x)**2 + (position_last.y-position_next.y)**2)*unite_graph;
+            indice_busStop:=1;
+            Speed_Control.START;
+            
+            put("position last (");put(position_last.x);put(position_last.y);put(")");
+            put("position next (");put(position_next.x);put(position_next.y);put(")");
+
+
+        end restart;
+        
+        
         procedure changeDirection is
         begin
             if(direction = Aller) then
@@ -231,7 +256,7 @@ task body Bus is
             put_line(integer'image(speed));
         end DECELERATE;
           
-        entry STOP when speed > 0 is
+        entry STOP when speed >= 0 is
         begin
             fin:= Seconds(Clock);
             duree:=fin-debut;
@@ -257,6 +282,7 @@ task body Bus is
         protected StandardChannel is
             procedure sendBusPosition(num_bus : in integer; position : in T_Position);
             procedure receiveTimeDelay (delay_time : in float);
+            procedure restart;
         end StandardChannel;
     
         protected body StandardChannel is
@@ -267,6 +293,12 @@ task body Bus is
                 --appel a la radio du centre
 
             end sendBusPosition;
+            
+            procedure restart is
+            begin
+                Driver.restart;
+                put_line(" #### on passe dans le restart radio standard channel");  
+            end restart;
             
             procedure receiveTimeDelay (delay_time : in float) is
             begin
@@ -303,6 +335,11 @@ task body Bus is
                 accept receiveTimeDelay(timeDelay : in Float) do
                     StandardChannel.receiveTimeDelay(timeDelay);
                 end receiveTimeDelay;
+            or
+                accept restart do
+                    StandardChannel.restart;
+                    put_line(" #### on passe dans le restart radio");  
+                end restart; 
             end select;
             
         end loop;
@@ -326,9 +363,10 @@ task body Bus is
             rapport : float;
         begin
             covered_distance:=covered_distance + float(cycle_time) * float(speed)/3.6;
+         
             distance_restante := distanceBetweenBusStop - covered_distance;
-            put("distance parcourue : ");Put(covered_distance,4,3,0);New_line;        
-           -- put("distance restante : ");Put(distance_restante,4,3,0);New_line;
+            --put("distance parcourue : ");Put(covered_distance,4,3,0);New_line;        
+            put("distance restante : ");Put(distance_restante,4,3,0);New_line;
             
             -- la distance parcourue a été mise à jour : on met a jour la position
             --on suppose qu'une unité de position = 10 m
@@ -387,42 +425,45 @@ task body Bus is
                    
                 --mise à jour du prochain arret à faire
                 lastBusStopCapted:=nextBusStop;
-                indice_busStop:=indice_busStop+1;
-                    
+                indice_busStop:=indice_busStop+1;   
                 --test si c'est le terminus ou non
-                if (line.busStop_List(indice_busStop+1) /= null) then
-                    nextBusStop:=line.busStop_List(indice_busStop);
+                if (line.busStop_List(indice_busStop+1) /= null) then   
+                    nextBusStop:=line.busStop_List(indice_busStop+1);
                     --remise a zero de la distance parcourue
                     covered_distance := 0.0;
                     distance_restante := 0.0;
+                       
                     --simulation de la montée / descente des voyageurs
                     delay(2.0);
+                    
+                    -- recuperation des positions des 2 arrets enre lesquels se trouve le bus
+                    lastBusStopCapted.busStop.returnPositionBusStop(position_last);
+                    nextBusStop.busStop.returnPositionBusStop(position_next);
+                    -- mise à jour de la distance entre les deux arrets
+                    distanceBetweenBusStop := sqrt((position_last.x-position_next.x)**2 + (position_last.y-position_next.y)**2)*unite_graph;
+                    put_line("distance entre les 2 arret = ");Put(distanceBetweenBusStop,4,3,0);New_line;
+                    Speed_control.START;
+                    
                 else
                     New_line;
                     put_line("****** TERMINUS DU BUS " &integer'image(id_bus) &" TOUT LE MONDE DESCEND ********");
                     New_line;
-                    -- on repart dans l'autre sens
-                    inverserListe(line.BusStop_List);
-                    Driver.changeDirection;
-                    -- remise a zero de la distance parcourue
-                    covered_distance := 0.0;
-                    distance_restante := 0.0;
+                    --appel d'une fonction C pour indiquer que l'on est arrivé au terminus
+
+                    arrivedToTerminus(int(id_bus));
+                    indice_busStop:=1;
                     
-                    --terminus donc on attend un peu
-                    delay(10.0);  
+                    put("------------------->last bus stop capted ");
+                    put(Integer'Image(indice_busStop));
+
                 end if;
                 
-                -- recuperation des positions des 2 arrets enre lesquels se trouve le bus
-                lastBusStopCapted.busStop.returnPositionBusStop(position_last);
-                nextBusStop.busStop.returnPositionBusStop(position_next);
                 
-                -- mise à jour de la distance entre les deux arrets
-                distanceBetweenBusStop := sqrt((position_last.x-position_next.x)**2 + (position_last.y-position_next.y)**2)*unite_graph;
-                put_line("distance entre les 2 arret = ");Put(distanceBetweenBusStop,4,3,0);New_line;
-                    
+                
                 --on redémarre le bus
-                Speed_control.START;
-                IS_ARRIVED_BUSSTOP:=false;                       
+                
+                IS_ARRIVED_BUSSTOP:=false;  
+                                     
             end if;
         end loop;
     end Sensor;
@@ -463,7 +504,13 @@ begin
         or
             accept changeLine(new_line : in ptrT_line) do
                 Driver.changeLine(new_line);
-            end changeLine;    
+            end changeLine;  
+        or
+            accept restart do
+                null;
+                Radio.restart;
+                put_line(" #### on passe dans le restart bus");  
+            end restart;   
         or
             accept changeDirection do
                 Driver.changeDirection;

@@ -48,6 +48,10 @@ package init_object is
     procedure sendDelay(id_bus : int;delay_t : in C_Float);
     pragma Export(C, sendDelay, "sendDelay");
     
+    --procédure appelée depuis le centre pour redémarrer le bus apres un terminus(changement de ligne ou retour)
+    procedure restart(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c);
+    pragma Export(C, restart, "restart");
+    
     --procédure appelée depuis le centre pour simuler un appel d'urgence d'un bus
     procedure simulateEmergency(id_bus : int;message : in String_c);
     pragma Export(C, simulateEmergency, "simulateEmergency");

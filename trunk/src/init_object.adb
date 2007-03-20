@@ -71,6 +71,19 @@ package body init_object is
         tab_Bus(num).receiveTimeDelay(Float(delay_t));        
     end sendDelay;
     
+    
+    --procédure appelé depuis le centre pour créer un bus
+     procedure restart(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c) is
+    bus_line :ptrT_Line;
+    begin
+        --on deserialise la chaine de caractere pour generer le plan de route du bus
+        deserialize(nb_arret,chaine_route,id_line,bus_line);
+        tab_Bus(Integer(id_bus)).changeLine(bus_line);
+        tab_Bus(Integer(id_bus)).restart;
+        
+    end restart; 
+    
+        
     --procédure appelée depuis le centre pour simuler un appel d'urgence d'un bus
     procedure simulateEmergency(id_bus : int;message : in String_c) is
         num:integer := integer(id_bus); 
@@ -147,10 +160,11 @@ package body init_object is
         while(i < compteur_tab) loop
             
             entier := Integer'Value(tab(1,i));    
-         
+            
             booleen := (tab(2,i) = "1 ");
             --on stocke dans le tableau d'arret le pointeur de l'arret 
-            arr(i):= new T_busStopRecord'(tab_BusStop(entier+1),booleen);
+            arr(i):= new T_busStopRecord'(tab_BusStop(entier),booleen);
+            put_line("valeur de entier... "&Integer'Image(entier));
             i :=i+1;
         end loop;
         --creation de la ligne pour retour

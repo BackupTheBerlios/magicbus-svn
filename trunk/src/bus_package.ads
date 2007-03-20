@@ -11,6 +11,10 @@ package Bus_package is
     procedure receivePosition(id_bus:in int;x : in C_float ; y :in C_float;x_last : in C_float ; y_last :in C_float);
     pragma import(C, receivePosition, "receivePosition");
     
+    
+    procedure arrivedToTerminus(id_bus:in int);
+    pragma import(C, arrivedToTerminus, "arrivedToTerminus");
+    
     procedure receiveEmergency(num_bus : in int;smessage : in char_array;x : in C_float;y:in C_float);
     pragma import(C, receiveEmergency, "receiveEmergency");
     
@@ -18,6 +22,8 @@ package Bus_package is
         entry start;
         entry stop;
         entry changeLine(new_line : in ptrT_line);
+        --entry restart(id_bus : int;id_line:in int; nb_arret:in int;chaine_route : in string_c);
+        entry restart;
         entry changeDirection;
         entry receiveTimeDelay(delay_time : in float);
         entry sendBusPosition(num_bus : in integer ; position : in T_Position);
