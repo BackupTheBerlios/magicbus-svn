@@ -4,14 +4,19 @@
 /**** Mattler Florence,Lapeyre Martial, Cazenave Florent, Ménard Alexis********/
 /******************************************************************************/
 /******************************************************************************/
+
 #include <pthread.h>
-#include <stdio.h>
+
 #include <time.h>
-#include <math.h>
+#include <math.h>                                                                                                                                                   
+#include <stdio.h>
 #define NBBUSSTOP 20
 #define NBBUS 2
 #define TRUE  1
 #define FALSE 0
+#define AGRESSION '0' 
+#define ACCIDENT '1' 
+#define PBMECANIQUE '2' 
 #define bool  int
 /******************************************************************************/
 /***************Fonction externe appelé dans l'ADA*****************************/
@@ -135,6 +140,19 @@ void initArchivage();
 //procedure permettant la sauvegarde d'une evenement passé en paramètre
 void archiver (char * message);
 
+//fonction qui permet d'appeler les pompiers
+void callFiremen(int id_bus, char * message, float x, float y);
+
+//fonction qui permet d'appeler la police
+void callPolice(int id_bus, char * message, float x, float y);
+
+//fonction qui permet d'appeler la dépanneuse
+void callBreakDownTruck(int id_bus, char * message, float x, float y);
+
+//fonction qui permet d'appeler le samu
+void callAmbulance(int id_bus, char * message, float x, float y);
+
+
 struct param
     {
            int id_bus;
@@ -184,6 +202,7 @@ int main(int argc, char *argv[]){
     while (i<=NBBUSSTOP)
     {
      
+       srand (time (NULL));
        //génération aleatoire du placement des arrêts
        if(i==1)
        {
@@ -192,17 +211,17 @@ int main(int argc, char *argv[]){
        }     
        else
        {
-               nb_alea = (rand()%71);
-               if( nb_alea%2==0)
+               nb_alea = (rand()%21);
+               if(nb_alea%2==0)
                {
                    tab_BusStop[i].x+=tab_BusStop[i-1].x+(float)nb_alea;
-                   nb_alea = rand()%71;               
+                   nb_alea = rand()%21;               
                    tab_BusStop[i].y+=tab_BusStop[i-1].y+(float)nb_alea;
                }
                else
                {
                    tab_BusStop[i].x+=tab_BusStop[i-1].x+(float)nb_alea;
-                   nb_alea = rand()%71;               
+                   nb_alea = rand()%21;               
                    tab_BusStop[i].y+=tab_BusStop[i-1].y-(float)nb_alea;               
                }
                
@@ -259,7 +278,7 @@ int main(int argc, char *argv[]){
 
     sleep(12000);
     //on simule une urgence sur le bus 1
-    simulateEmergency(1,"Probleme de freins");
+    simulateEmergency(1,"0:Probleme de freins");
 
     //2 eme bus a instancier si on veut faire mumuz
     
@@ -563,6 +582,26 @@ void receiveEmergency(int id_bus, char * message, float x, float y)
     p.message=message;
     p.x_courant=x;
     p.y_courant=y;
+    
+    //redirection de l'appel d'urgence en fonction de sa nature
+    //agression
+    if(message[0] == AGRESSION){
+         callPolice(id_bus,message,x,y);
+         callAmbulance(id_bus, message, x, y);
+    }
+    //accident
+    else if(message[0] == ACCIDENT){
+         callFiremen(id_bus,message,x,y);
+    }
+    //problème mécanique
+    else if(message[0] == PBMECANIQUE){
+         callBreakDownTruck(id_bus, message , x, y);
+    }
+    else{
+         printf("\n\n Le bus %d (%f,%f) a recontre un probleme inconnu : %s \n\n ", id_bus,x,y,message);
+    }
+         
+    
 
     //archivage des informations dans log.txt
     sprintf(archivage,"%d:%d:%d;bus:%d;Urgence(%3.2f,%3.2f)\n",time(NULL)/3600%24+1,time(NULL)/60%60,time(NULL)%60,id_bus,x,y);
@@ -696,7 +735,35 @@ void archiver (char * message)
 }
 
 
+void callFiremen(int id_bus, char * message, float x, float y){
+     printf("\n\n *********************************************************\n");
+     printf("Les pompiers sont appeles par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("URGENCE : %s\n",message);
+     printf("*********************************************************\n\n ");
+}
 
+
+void callPolice(int id_bus, char * message, float x, float y){
+     printf("\n\n *********************************************************\n");
+     printf("La police est appelee par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("AGRESSION : %s\n",message);
+     printf("*********************************************************\n\n ");     
+}
+
+void callBreakDownTruck(int id_bus, char * message, float x, float y){
+     printf("\n\n *********************************************************\n");
+     printf("La depanneuse est appelee par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("PANNE : %s\n",message);
+     printf("*********************************************************\n\n ");     
+}
+
+
+void callAmbulance(int id_bus, char * message, float x, float y){
+     printf("\n\n  *********************************************************\n");
+     printf("L'ambulance est appelee par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("SECOURS : %s\n",message);
+     printf("*********************************************************\n\n ");     
+}
 
 
 
