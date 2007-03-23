@@ -5,6 +5,7 @@
 /******************************************************************************/
 /******************************************************************************/
 #include <pthread.h>
+#include <stdio.h>
 #include <time.h>
 #include <math.h>
 #define NBBUSSTOP 20
@@ -128,6 +129,12 @@ char * serialiser(struct Line L);
 //fonction qui retourne le tableau des arrets (ligne) passée en paramètres.
 void swap_tableau(struct Line * L);
 
+//fonction initialisant le fichier d'archive
+void initArchivage();
+
+//procedure permettant la sauvegarde d'une evenement passé en paramètre
+void archiver (char * message);
+
 struct param
     {
            int id_bus;
@@ -164,7 +171,8 @@ int main(int argc, char *argv[]){
     int minuteActuelle=time(NULL)/60%60;
     //lancement de la configuration ADA/C    
     adainit();
-    
+    //initialisation de larchiveur (raz du fichier log.txt)
+    initArchivage();
     //lancement de la configuration du reseau
     initGen(NBBUSSTOP,NBBUS);
     
@@ -290,12 +298,18 @@ void receivePosition(int id_bus, float x, float y, float x_last, float y_last)
 {
     struct param p;
     int res;
+    char * archivage=(char*)malloc(100);
     pthread_t id_thread;
     p.id_bus=id_bus;
     p.x_courant=x;
     p.y_courant=y;
     p.x_dernier=x_last;
     p.y_dernier=y_last;
+
+    //archivage de la reception
+    sprintf(archivage,"%d:%d:%d;bus:%d;position(%3.2f,%3.2f)\n",time(NULL)/3600%24+1,time(NULL)/60%60,time(NULL)%60,id_bus,x,y);
+    archiver (archivage);
+
     //on a la position courante et la position du dernier arret qu'on vient de passer
     //il faut calculer le delai de retard/avance à partir des horaires
     res=pthread_create(&id_thread,NULL,(void *) calculateDelay,&p);
@@ -436,10 +450,10 @@ void calculateDelay(void * arg)
              }
              i++;
       }
-      for(j = 0; j < tab_Bus[indice].l.nb_arret; j++)
+   /*   for(j = 0; j < tab_Bus[indice].l.nb_arret; j++)
     {
        printf("JJSDHUFGSDJFGFHFH %d\n",tab_Bus[indice]. l. tab_BusRoad[j].id_busStop);
-    }
+    }      */
 
       //on recupere la position du prochain arret
       trouve=FALSE;
@@ -498,17 +512,17 @@ void calculateDelay(void * arg)
      //or on en a parcouru
      reelle_distance=sqrt(((*pa).x_dernier-(*pa).x_courant)*((*pa).x_dernier-(*pa).x_courant)+((*pa).y_dernier-(*pa).y_courant)*((*pa).y_dernier-(*pa).y_courant))*10;
 
-     printf("*   on a parcouru %f a la place de %f\n",reelle_distance,theoric_distance);
+     printf("*   on a parcouru %4.2f a la place de %4.2f\n",reelle_distance,theoric_distance);
 
      resultat=(float)duree_entre_deux_arrets*(theoric_distance-reelle_distance)/distance;
      if(resultat < 0.0){
           printf("***************************************************************\n");
-          printf("*   Le bus est en avance de : %f secondes * \n",-resultat);
+          printf("*   Le bus est en avance de : %3.2f secondes * \n",-resultat);
           printf("***************************************************************\n");
      }
      else{
          printf("***************************************************************\n");
-         printf("*   Le bus est en retard de : %f secondes * \n",resultat);
+         printf("*   Le bus est en retard de : %3.2f secondes * \n",resultat);
          printf("***************************************************************\n");
      }
 
@@ -518,7 +532,7 @@ void calculateDelay(void * arg)
      
      trouve=FALSE;
      j=0;
-     envoi=malloc(100);
+     envoi=(char *)malloc(100);
      while( j<tab_Bus[indice].l.nb_arret)
      {
               if(tab_Bus[indice].l.tab_BusRoad[j].id_busStop==id_next_busstop)
@@ -527,9 +541,9 @@ void calculateDelay(void * arg)
               }
               if(trouve==TRUE){
                  if(resultat<0){
-                   sprintf(envoi,"affichage arret %d: le bus %d a %f secondes d'avance\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop,idbus,-resultat);
+                   sprintf(envoi,"affichage arret %d: le bus %d a %3.2f secondes d'avance\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop,idbus,-resultat);
                  }else{
-                    sprintf(envoi,"affichage arret %d: le bus %d a %f secondes de retard\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop,idbus,resultat);
+                    sprintf(envoi,"affichage arret %d: le bus %d a %3.2f secondes de retard\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop,idbus,resultat);
                  }
                  printf("on envoi sur le bisstop %d\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop);
                  affichage_arret(tab_Bus[indice].l.tab_BusRoad[j].id_busStop,envoi);
@@ -543,11 +557,16 @@ void receiveEmergency(int id_bus, char * message, float x, float y)
 {
     int res;
     struct param2 p;
+    char * archivage=(char*)malloc(100);
     pthread_t id_thread;
     p.id_bus=id_bus;
     p.message=message;
     p.x_courant=x;
     p.y_courant=y;
+
+    //archivage des informations dans log.txt
+    sprintf(archivage,"%d:%d:%d;bus:%d;Urgence(%3.2f,%3.2f)\n",time(NULL)/3600%24+1,time(NULL)/60%60,time(NULL)%60,id_bus,x,y);
+    archiver (archivage);
     //on thread pour traiter en parallele les demandes d'urgence
     res=pthread_create(&id_thread,NULL,(void *) calculateRoute,&p);
     if (res!=0)
@@ -555,8 +574,10 @@ void receiveEmergency(int id_bus, char * message, float x, float y)
        printf("error");
        exit(2);
     }
-    //pthread_join(id_thread,NULL);*/
+    //pthread_join(id_thread,NULL);
      printf("Le centre recoit une urgence du bus : %d\n",id_bus);
+
+
 }
 
 //fonction C qui selon l'urgence recalcule l'itinéraire du bus
@@ -564,8 +585,8 @@ void calculateRoute(void * arg)
 {
      struct param2 * pa = (struct param2 *) arg;
      char * message=(*pa).message;
-     //on calcule la route MARTIAL ToDO DEMERDE TOI :p
-     printf("Le message d'urgence est : %s\n",message);    
+     //TODO
+
 }
 
 //serialise une ligne en char * pour la passer a l'ADA
@@ -657,8 +678,22 @@ struct BusStop getBusStop(int idBusStop){
            j++;
       }
 }
+void initArchivage()
+{
+   FILE *file = fopen("log.txt","w");
+   fclose(file);
+}
+void archiver (char * message)
+{
 
-
+   FILE *file = fopen("log.txt","a+");
+   if (file == NULL) {
+      printf("Erreur dans l'ouverture du fichier\n");
+      exit(-1);
+    }
+   fwrite(message,1,strlen(message),file);
+   fclose(file);
+}
 
 
 
