@@ -5,20 +5,36 @@
 /******************************************************************************/
 /******************************************************************************/
 
-#include <pthread.h>
 
+
+
+// inclusions des librairies utiles
+#include <pthread.h>
 #include <time.h>
 #include <math.h>                                                                                                                                                   
 #include <stdio.h>
+
+
+
+//definitions des variables 
+//nombre total d'arrets de bus
 #define NBBUSSTOP 20
+//nombre total de bus dans le réseau (+1)
 #define NBBUS 3
+//definition de "booleens"
 #define TRUE  1
 #define FALSE 0
+//definition des types d'avaries possibles pour un bus.
 #define AGRESSION '0' 
 #define ACCIDENT '1' 
 #define PBMECANIQUE '2' 
+//definition du "type" booleen
 #define bool  int
+//fichier d'archivage de l'execution du programme (en écriture destructrice)
 #define nomFic "log.txt"
+
+
+
 /******************************************************************************/
 /***************Fonction externe appelé dans l'ADA*****************************/
 /******************************************************************************/
@@ -102,12 +118,14 @@ struct horaire {
 struct horaire tab_horaires_depart[NBBUS];
 
 //Stucture contenant les informations sur le parcour du bus
+//arrets de bus que doit suivre un bus
 struct Bus_road {
        int id_busStop;
        bool required;
        int duree;
 };
 
+//définition d'une ligne
 struct Line 
 {
     int id_line;
@@ -116,6 +134,7 @@ struct Line
       
 };
 
+//définition du bus
 struct Bus
 {
        int id_bus;
@@ -153,7 +172,7 @@ void callBreakDownTruck(int id_bus, char * message, float x, float y);
 //fonction qui permet d'appeler le samu
 void callAmbulance(int id_bus, char * message, float x, float y);
 
-
+//structure qui définit pour un bus sa derniere position et sa position courante
 struct param
     {
            int id_bus;
@@ -162,7 +181,8 @@ struct param
            float x_dernier;
            float y_dernier;       
     };
-    
+
+//structure qui est utilisée pour envoyer des parametres à une fonction threadée    
 struct param2
     {
            int id_bus;
