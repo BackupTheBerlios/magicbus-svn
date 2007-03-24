@@ -170,6 +170,9 @@ struct param2
            char * message;       
     };
 
+//exclusion mutuelle lors de l'utilisation du fichier d'archivage en ecriture
+pthread_mutex_t ecritureArchive;
+
 //main du simulateur
 int main(int argc, char *argv[]){
     
@@ -187,12 +190,21 @@ int main(int argc, char *argv[]){
     int nb_alea;
     int heureActuelle=time(NULL)/3600%24+1;
     int minuteActuelle=time(NULL)/60%60;
+    int retour;
     //lancement de la configuration ADA/C    
     adainit();
     //initialisation de larchiveur (raz du fichier log.txt)
     initArchivage();
     //lancement de la configuration du reseau
     initGen(NBBUSSTOP,NBBUS);
+
+    //initialisation de l'exclusion mutelle pour archivage
+    retour=pthread_mutex_init (&ecritureArchive , NULL );
+    if(retour==-1){
+       printf("erreur lors de l'initialisation du mutex\n");
+       exit(-3);
+    }
+
     
     /**************************************************************************/
     /************************Creation des arrêts*******************************/
@@ -282,30 +294,48 @@ int main(int argc, char *argv[]){
 
     //2 eme bus a instancier si on veut faire mumuz
     
-  /*
+    /*
     L2.id_line=2;
     arret_depart=3;
     j=arret_depart;
     L2.nb_arret=3;
     duree=0;
+    posx = posy = oldposx = oldposy = pos = 0.0;
     //on charge tous les arrêts dans la ligne 2
     while (j<(L2.nb_arret+arret_depart))
     {
        b2.required=TRUE;
        b2.id_busStop=j;
-        //TODO ajouter un random ?
+        temps=0.0;
+       if(j != arret_depart){
+            posx = tab_BusStop[j].x;
+            posy = tab_BusStop[j].y;
+            pos = sqrt((oldposx-posx)*(oldposx-posx)+(oldposy-posy)*(oldposy-posy))*10;
+            pos = (pos/1000);   //pos en km
+            temps= pos/30;
+            temps=temps*3600;
+            duree=duree+temps;
+            oldposx = posx;
+            oldposy = posy;
+       }else
+       {
+       oldposx=tab_BusStop[j].x;
+       oldposy=tab_BusStop[j].y;
+       }
+
+
        b2.duree=duree;
        duree=duree+3;
        L2.tab_BusRoad[(j-arret_depart)]=b2;
        j++;
     }
    tab_horaires_depart[2].heure=heureActuelle;
-   tab_horaires_depart[2].minute=minuteActuelle+1;
-   tab_horaires_depart[2].seconde=0;
+   tab_horaires_depart[2].minute=minuteActuelle;
+   tab_horaires_depart[2].seconde=time(NULL)%60;
    tab_horaires_depart[2].id_bus=2;
 
     init_bus_c(2,L2);
-       */
+    */
     //appel de la terminaison Ada/C
     adafinal();
     return 0;
@@ -394,6 +424,7 @@ void init_bus_c(int id_bus,struct Line L)
      b.l=L;
      tab_Bus[id_bus]=b;
      l=serialiser(L);
+
      lancement_bus(id_bus,L.id_line,L.nb_arret,l);
 }
 
@@ -725,13 +756,16 @@ void initArchivage()
 void archiver (char * message)
 {
 
-   FILE *file = fopen("log.txt","a+");
+   FILE *file ;
+   pthread_mutex_lock(&ecritureArchive);
+   file = fopen("log.txt","a+");
    if (file == NULL) {
       printf("Erreur dans l'ouverture du fichier\n");
       exit(-1);
     }
    fwrite(message,1,strlen(message),file);
    fclose(file);
+   pthread_mutex_unlock(&ecritureArchive);
 }
 
 
