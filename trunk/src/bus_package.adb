@@ -464,10 +464,8 @@ task body Bus is
     
 begin 
     Put_line("on demarre le bus");  
-    position.x := 0.0;
-    position.y := 0.0;
-    position_last.x := 0.0;
-    position_last.y := 0.0;
+    line.busStop_List(1).busStop.returnPositionBusStop(position);
+    line.busStop_List(1).busStop.returnPositionBusStop(position_last);
     nextBusStop.busStop.returnPositionBusStop(position_next);
     -- calcul de la distance initiale entre le depart et le prochain arret de bus
     -- la distance entre 2 points de coordonnées (x1,y1) et (x2,y2)

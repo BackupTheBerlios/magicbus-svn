@@ -11,13 +11,14 @@
 #include <math.h>                                                                                                                                                   
 #include <stdio.h>
 #define NBBUSSTOP 20
-#define NBBUS 2
+#define NBBUS 3
 #define TRUE  1
 #define FALSE 0
 #define AGRESSION '0' 
 #define ACCIDENT '1' 
 #define PBMECANIQUE '2' 
 #define bool  int
+#define nomFic "log.txt"
 /******************************************************************************/
 /***************Fonction externe appelé dans l'ADA*****************************/
 /******************************************************************************/
@@ -288,13 +289,13 @@ int main(int argc, char *argv[]){
     tab_horaires_depart[1].id_bus=1;
     init_bus_c(1,L1);
 
-    sleep(12000);
+    sleep(9000);
     //on simule une urgence sur le bus 1
-    simulateEmergency(1,"0:Probleme de freins");
+    simulateEmergency(1,"0:Attaque a l arme blanche");
 
     //2 eme bus a instancier si on veut faire mumuz
     
-    /*
+    
     L2.id_line=2;
     arret_depart=3;
     j=arret_depart;
@@ -322,23 +323,23 @@ int main(int argc, char *argv[]){
        oldposx=tab_BusStop[j].x;
        oldposy=tab_BusStop[j].y;
        }
-
+       
+       
 
        b2.duree=duree;
        duree=duree+3;
        L2.tab_BusRoad[(j-arret_depart)]=b2;
        j++;
     }
+    
    tab_horaires_depart[2].heure=heureActuelle;
    tab_horaires_depart[2].minute=minuteActuelle;
    tab_horaires_depart[2].seconde=time(NULL)%60;
    tab_horaires_depart[2].id_bus=2;
-
-    init_bus_c(2,L2);
-    */
-    //appel de la terminaison Ada/C
-    adafinal();
-    return 0;
+   init_bus_c(2,L2);
+   //appel de la terminaison Ada/C
+   adafinal();
+   return 0;
 }
 
 //fonction C permettant de recevoir des bus leur position, appel de calculatedelay qui
@@ -417,14 +418,13 @@ void init_busStop_c(int id, float x, float y)
 //fonction C qui serialise le type ligne, le passe a l'ADA pour creer le bus
 void init_bus_c(int id_bus,struct Line L)
 {
-     char * l;
+     char * l = (char *)malloc(100);
      struct Bus b;
      printf(" ");
      b.id_bus=id_bus;
      b.l=L;
      tab_Bus[id_bus]=b;
      l=serialiser(L);
-
      lancement_bus(id_bus,L.id_line,L.nb_arret,l);
 }
 
@@ -500,11 +500,6 @@ void calculateDelay(void * arg)
              }
              i++;
       }
-   /*   for(j = 0; j < tab_Bus[indice].l.nb_arret; j++)
-    {
-       printf("JJSDHUFGSDJFGFHFH %d\n",tab_Bus[indice]. l. tab_BusRoad[j].id_busStop);
-    }      */
-
       //on recupere la position du prochain arret
       trouve=FALSE;
       j=1;
@@ -561,9 +556,7 @@ void calculateDelay(void * arg)
 
      //or on en a parcouru
      reelle_distance=sqrt(((*pa).x_dernier-(*pa).x_courant)*((*pa).x_dernier-(*pa).x_courant)+((*pa).y_dernier-(*pa).y_courant)*((*pa).y_dernier-(*pa).y_courant))*10;
-
-     printf("*   on a parcouru %4.2f a la place de %4.2f\n",reelle_distance,theoric_distance);
-
+     
      resultat=(float)duree_entre_deux_arrets*(theoric_distance-reelle_distance)/distance;
      if(resultat < 0.0){
           printf("***************************************************************\n");
@@ -595,7 +588,7 @@ void calculateDelay(void * arg)
                  }else{
                     sprintf(envoi,"affichage arret %d: le bus %d a %3.2f secondes de retard\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop,idbus,resultat);
                  }
-                 printf("on envoi sur le bisstop %d\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop);
+                 printf("on envoi sur l'arret de bus %d\n",tab_Bus[indice].l.tab_BusRoad[j].id_busStop);
                  affichage_arret(tab_Bus[indice].l.tab_BusRoad[j].id_busStop,envoi);
               }
               j++;
@@ -607,35 +600,41 @@ void receiveEmergency(int id_bus, char * message, float x, float y)
 {
     int res;
     struct param2 p;
-    char * archivage=(char*)malloc(100);
+    char * archivage=(char*)malloc(200);
+    char * temp=(char*)malloc(100);
     pthread_t id_thread;
     p.id_bus=id_bus;
     p.message=message;
     p.x_courant=x;
     p.y_courant=y;
+
     
     //redirection de l'appel d'urgence en fonction de sa nature
     //agression
     if(message[0] == AGRESSION){
          callPolice(id_bus,message,x,y);
          callAmbulance(id_bus, message, x, y);
+         sprintf(temp,"AGRESSION : %s",message);
     }
     //accident
     else if(message[0] == ACCIDENT){
          callFiremen(id_bus,message,x,y);
+         sprintf(temp,"ACCIDENT : %s",message);
     }
     //problème mécanique
     else if(message[0] == PBMECANIQUE){
          callBreakDownTruck(id_bus, message , x, y);
+         sprintf(temp,"PBMECANIQUE : %s",message);
     }
     else{
-         printf("\n\n Le bus %d (%f,%f) a recontre un probleme inconnu : %s \n\n ", id_bus,x,y,message);
+         printf("\n\n Le bus %d (%3.2f,%3.2f) a recontre un probleme inconnu : %s \n\n ", id_bus,x,y,message);
+         sprintf(temp,"PB INCONNU : %s",message);         
     }
          
     
 
     //archivage des informations dans log.txt
-    sprintf(archivage,"%d:%d:%d;bus:%d;Urgence(%3.2f,%3.2f)\n",time(NULL)/3600%24+1,time(NULL)/60%60,time(NULL)%60,id_bus,x,y);
+    sprintf(archivage,"%d:%d:%d;bus:%d;position (%3.2f,%3.2f) : %s\n",time(NULL)/3600%24+1,time(NULL)/60%60,time(NULL)%60,id_bus,x,y,temp);
     archiver (archivage);
     //on thread pour traiter en parallele les demandes d'urgence
     res=pthread_create(&id_thread,NULL,(void *) calculateRoute,&p);
@@ -644,10 +643,6 @@ void receiveEmergency(int id_bus, char * message, float x, float y)
        printf("error");
        exit(2);
     }
-    //pthread_join(id_thread,NULL);
-     printf("Le centre recoit une urgence du bus : %d\n",id_bus);
-
-
 }
 
 //fonction C qui selon l'urgence recalcule l'itinéraire du bus
@@ -668,6 +663,7 @@ char * serialiser(struct Line L)
      char * tmp1;
      char * tmp2;
      int taille=0;
+     
      while(i<L.nb_arret)
      {
           if(L.tab_BusRoad[i].required)
@@ -679,21 +675,20 @@ char * serialiser(struct Line L)
            tempbool="0";
           }
           //on libere puis on realloue les variables temporaires
-          free(tmp1);
-          free(tmp2);
-          tmp1=(char*)malloc( sizeof(L.tab_BusRoad[i].id_busStop)+4 );
-          tmp2=(char*)malloc( strlen(resultat)*4+sizeof(L.tab_BusRoad[i].id_busStop)+4);
-
+          
+          tmp1=(char*)malloc(100);
+          tmp2=(char*)malloc(100);
+          
           //On creer la chaine a concatener
           sprintf(tmp1,"%d;%s/",L.tab_BusRoad[i].id_busStop,tempbool);
-
+          
           //on copie les chaines déjà sauvegardées
           strcpy(tmp2,resultat);
           //on rajoute la portion en cours
           strcat(tmp2,tmp1);
           //on replace le tout dans la variable à retourner
           free(resultat);
-          resultat=(char*)malloc(strlen(tmp2));
+          resultat=(char*)malloc(100);
           strcpy(resultat,tmp2);
          i++;
 
@@ -750,7 +745,7 @@ struct BusStop getBusStop(int idBusStop){
 }
 void initArchivage()
 {
-   FILE *file = fopen("log.txt","w");
+   FILE *file = fopen(nomFic,"w");
    fclose(file);
 }
 void archiver (char * message)
@@ -758,7 +753,7 @@ void archiver (char * message)
 
    FILE *file ;
    pthread_mutex_lock(&ecritureArchive);
-   file = fopen("log.txt","a+");
+   file = fopen(nomFic,"a+");
    if (file == NULL) {
       printf("Erreur dans l'ouverture du fichier\n");
       exit(-1);
@@ -770,31 +765,31 @@ void archiver (char * message)
 
 
 void callFiremen(int id_bus, char * message, float x, float y){
-     printf("\n\n *********************************************************\n");
-     printf("Les pompiers sont appeles par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("\n\n*********************************************************\n");
+     printf("Les pompiers sont appeles par le bus %d (%3.2f,%3.2f)\n",id_bus,x,y);
      printf("URGENCE : %s\n",message);
      printf("*********************************************************\n\n ");
 }
 
 
 void callPolice(int id_bus, char * message, float x, float y){
-     printf("\n\n *********************************************************\n");
-     printf("La police est appelee par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("\n\n*********************************************************\n");
+     printf("La police est appelee par le bus %d (%3.2f,%3.2f)\n",id_bus,x,y);
      printf("AGRESSION : %s\n",message);
      printf("*********************************************************\n\n ");     
 }
 
 void callBreakDownTruck(int id_bus, char * message, float x, float y){
-     printf("\n\n *********************************************************\n");
-     printf("La depanneuse est appelee par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("\n\n*********************************************************\n");
+     printf("La depanneuse est appelee par le bus %d (%3.2f,%3.2f)\n",id_bus,x,y);
      printf("PANNE : %s\n",message);
      printf("*********************************************************\n\n ");     
 }
 
 
 void callAmbulance(int id_bus, char * message, float x, float y){
-     printf("\n\n  *********************************************************\n");
-     printf("L'ambulance est appelee par le bus %d (%f,%f)\n",id_bus,x,y);
+     printf("\n\n*********************************************************\n");
+     printf("L'ambulance est appelee par le bus %d (%3.2f,%3.2f)\n",id_bus,x,y);
      printf("SECOURS : %s\n",message);
      printf("*********************************************************\n\n ");     
 }
