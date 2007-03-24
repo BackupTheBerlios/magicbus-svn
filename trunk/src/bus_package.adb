@@ -226,17 +226,16 @@ task body Bus is
             put_line("*** Depart du bus " &integer'image(id_bus) &" a " &integer'image(heures)&" h" 
                 &integer'image(minutes) &" m" &integer'image(secondes) &" s ***");
             speed:=30;
-            put("speed = ") ; put_line(integer'image(speed));
         end START;
     
-        entry ACCELERATE when speed < 50 is
+        entry ACCELERATE when speed < 50 and speed > 0 is
         begin
             fin:= Seconds(Clock);
             duree:=fin-debut;
             debut:=Seconds(Clock);
            -- Odometer.updateDistance(duree);
             speed:=speed + 5;
-            put("acceleration speed = ") ; put_line(integer'image(speed));
+            New_Line;put("vitesse du bus ");put(Integer'image(id_bus));put(" = ") ; put_line(integer'image(speed));
         end ACCELERATE;
        
         entry DECELERATE when speed > 0 is
@@ -246,7 +245,7 @@ task body Bus is
             debut:=Seconds(Clock);
             --Odometer.updateDistance(duree);
             speed:=speed - 5;
-            put("speed : ") ;
+            New_Line;put("vitesse du bus ");put(Integer'image(id_bus));put(" = ") ; put_line(integer'image(speed));
             put_line(integer'image(speed));
         end DECELERATE;
           
@@ -256,10 +255,11 @@ task body Bus is
             duree:=fin-debut;
             debut:=Seconds(Clock);
            -- Odometer.updateDistance(duree);
-            put ("Arrivée a un arret!! Il reste " );Put(distance_restante,4,3,0); put_line(" metres a parcourir");
+            New_Line;
+            --put ("Arrivée a un arret!! Il reste " );Put(distance_restante,4,3,0); put_line(" metres a parcourir");
             put_line("arret du bus ...");
             speed:=0;   
-            put("speed : ") ;put_line(integer'image(speed));
+            New_Line;put("vitesse du bus ");put(Integer'image(id_bus));put(" = ") ; put_line(integer'image(speed));
         end STOP;
         
     end Speed_Control;
@@ -358,10 +358,11 @@ task body Bus is
          
             distance_restante := distanceBetweenBusStop - covered_distance;
             
-            --if(distance_restante > 0.0) then      
+           -- if(distance_restante >= float(0.0)) then      
                 --put("distance parcourue : ");Put(covered_distance,4,3,0);New_line;  
-                put("distance restante : ");Put(distance_restante,4,3,0);New_line;
-            --end if;    
+                put("distance restante pour le bus ");Put(Integer'image(id_bus));Put(" : ");Put(distance_restante,4,3,0);New_line;
+      
+           -- end if;    
             
             -- la distance parcourue a été mise à jour : on met a jour la position
             --on suppose qu'une unité de position = 10 m
@@ -436,7 +437,7 @@ task body Bus is
                     nextBusStop.busStop.returnPositionBusStop(position_next);
                     -- mise à jour de la distance entre les deux arrets
                     distanceBetweenBusStop := sqrt((position_last.x-position_next.x)**2 + (position_last.y-position_next.y)**2)*unite_graph;
-                    put_line("distance entre les 2 arret = ");Put(distanceBetweenBusStop,4,3,0);New_line;
+                    --put_line("distance entre les 2 arret = ");Put(distanceBetweenBusStop,4,3,0);New_line;
                     Speed_control.START;                    
                 else
                     New_line;
@@ -463,7 +464,6 @@ task body Bus is
     -- **********************************************************
     
 begin 
-    Put_line("on demarre le bus");  
     line.busStop_List(1).busStop.returnPositionBusStop(position);
     line.busStop_List(1).busStop.returnPositionBusStop(position_last);
     nextBusStop.busStop.returnPositionBusStop(position_next);
@@ -471,12 +471,13 @@ begin
     -- la distance entre 2 points de coordonnées (x1,y1) et (x2,y2)
     -- est = racine_carree((x1-x2)² + (y1-y2)²)
     distanceBetweenBusStop := sqrt((position.x-position_next.x)**2 + (position.y-position_next.y)**2) *unite_graph;
-    put("distance entre les 2 arret = ");Put(distanceBetweenBusStop,4,3,0);New_line;
+    --put("distance entre les 2 arret = ");Put(distanceBetweenBusStop,4,3,0);New_line;
     Speed_Control.START;
 	loop
         select
             accept sendEmergencyCall(num_bus : in integer; emergency : in string) do
                --utilisation de la radio pour appel d'urgence
+                Speed_Control.STOP;
                 Radio.sendEmergencyCall(num_bus,emergency);
             end sendEmergencyCall;
         or
